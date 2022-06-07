@@ -172,7 +172,7 @@ def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str
             return scatter_plot(updated_df, m1, m2, highlights)
 
     app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=8050)
 
 
 if __name__ == '__main__':
