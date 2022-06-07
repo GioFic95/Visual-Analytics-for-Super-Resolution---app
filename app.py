@@ -1,4 +1,5 @@
 import itertools
+import os
 from pathlib import Path
 from typing import List, Dict
 
@@ -177,7 +178,7 @@ def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str
 
     app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
     # app.run(debug=True, use_reloader=False, host='0.0.0.0', port=8050)
-    app.run_server(debug=False, host='0.0.0.0', port=8050)
+    app.run_server(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
 
 
 if __name__ == '__main__':
