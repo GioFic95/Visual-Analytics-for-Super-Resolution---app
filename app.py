@@ -8,6 +8,7 @@ import dash
 from dash import dcc, Output, Input, State
 from dash import html
 import dash_bootstrap_components as dbc
+from whitenoise import WhiteNoise
 
 from plots import parallel_plot, scatter_plot
 
@@ -18,13 +19,13 @@ def get_df(csv: Path, types: Dict[str, type]) -> pd.DataFrame:
     return df
 
 
-def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str], highlights: List[str] = [], assets_folder="./resources"):
+def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str], highlights: List[str] = []):
     title = "Visual Analytics for Underwater Super Resolution"
     app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY], title=title,
-                    assets_folder=assets_folder, assets_url_path='/',
                     suppress_callback_exceptions=True)
     global server
     server = app.server
+    server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
     curr_dfp = get_df(csv_avg, types)
     curr_dfs = get_df(csv_all, types)
@@ -162,7 +163,7 @@ def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str
                     except KeyError:
                         continue
 
-            traces = [traces[i] for i in idxs]  # do NOT remove: it is used in the query!
+            traces = [traces[i] for i in idxs]
             # print(traces, idxs)
 
             m1, m2 = last_m12
@@ -171,7 +172,7 @@ def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str
             return scatter_plot(updated_df, m1, m2, highlights)
 
     app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
-    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=8050)
+    app.run(debug=True, use_reloader=False)
 
 
 if __name__ == '__main__':
@@ -192,6 +193,6 @@ if __name__ == '__main__':
                "type": str, "mask": bool, "category": str}
     metrics_l = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
     global server
-    main(Path("./resources/test_results_isb.csv"), Path("./resources/test_results_all_isb.csv"),
-         types_d, metrics_l, highlights, "./resources")
+    main(Path("./assets/test_results_isb.csv"), Path("./assets/test_results_all_isb.csv"),
+         types_d, metrics_l, highlights)
     print("server:", server)
