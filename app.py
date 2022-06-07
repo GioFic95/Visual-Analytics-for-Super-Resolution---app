@@ -9,6 +9,7 @@ from dash import dcc, Output, Input, State
 from dash import html
 import dash_bootstrap_components as dbc
 from whitenoise import WhiteNoise
+import gunicorn
 
 from plots import parallel_plot, scatter_plot
 
