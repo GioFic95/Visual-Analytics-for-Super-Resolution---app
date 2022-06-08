@@ -28,7 +28,6 @@ def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str
     title = "Visual Analytics for Underwater Super Resolution"
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                     suppress_callback_exceptions=True)
-    global server
     server = app.server
     server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
@@ -177,28 +176,31 @@ def main(csv_avg: Path, csv_all: Path, types: Dict[str, type], metrics: List[str
             return scatter_plot(updated_df, m1, m2, highlights)
 
     app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
-    # app.run(debug=True, use_reloader=False, host='0.0.0.0', port=8050)
-    app.run_server(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
 
+    return app, server
+
+
+highlights = [
+    "00000_BSRGAN_isb_7_3.png",
+    "00000_BSRGAN_isb_7_freeze_99.png",
+    "00000_BSRGAN_isb_7_t5_78.png",
+    "00010_BSRGAN_isb_7_t5_78.png",
+    "00011_BSRGAN_isb_2_3.png",
+    "00029_BSRGAN_isb_7_freeze_12.png",
+    "00029_BSRGAN_isb_7_freeze_99.png",
+    "00029_BSRGAN_isb_7_t5_30.png",
+    "00069_BSRGAN_isb_2_3.png",
+    "00069_BSRGAN_isb_7_freeze_99.png",
+    "00438_BSRGAN_isb_7_t5_78.png"
+]
+types_d = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
+           "type": str, "mask": bool, "category": str}
+metrics_l = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
+
+app, server = main(Path("./assets/test_results_isb.csv"), Path("./assets/test_results_all_isb.csv"),
+                   types_d, metrics_l, highlights)
 
 if __name__ == '__main__':
-    highlights = [
-        "00000_BSRGAN_isb_7_3.png",
-        "00000_BSRGAN_isb_7_freeze_99.png",
-        "00000_BSRGAN_isb_7_t5_78.png",
-        "00010_BSRGAN_isb_7_t5_78.png",
-        "00011_BSRGAN_isb_2_3.png",
-        "00029_BSRGAN_isb_7_freeze_12.png",
-        "00029_BSRGAN_isb_7_freeze_99.png",
-        "00029_BSRGAN_isb_7_t5_30.png",
-        "00069_BSRGAN_isb_2_3.png",
-        "00069_BSRGAN_isb_7_freeze_99.png",
-        "00438_BSRGAN_isb_7_t5_78.png"
-    ]
-    types_d = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
-               "type": str, "mask": bool, "category": str}
-    metrics_l = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
-    global server
-    main(Path("./assets/test_results_isb.csv"), Path("./assets/test_results_all_isb.csv"),
-         types_d, metrics_l, highlights)
     print("server:", server)
+    app.run(debug=False, use_reloader=False)
+    # app.run_server(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
