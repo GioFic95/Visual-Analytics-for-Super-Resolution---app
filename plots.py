@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
-def parallel_plot(df: pd.DataFrame):
+def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None, None)):
     if len(df) == 0:
         raise ValueError("\n***   empty dataframe   ***")
 
@@ -15,15 +15,15 @@ def parallel_plot(df: pd.DataFrame):
     return go.Figure(
         data=go.Parcoords(
             dimensions=list([
-                dict(range=[dfc['lpips'].max(), dfc['lpips'].min()],
+                dict(range=[dfc['lpips'].max(), dfc['lpips'].min()], constraintrange=constraints[0],
                      label='LPIPS', values=dfc['lpips']),
-                dict(range=[dfc['ssim'].min(), dfc['ssim'].max()],
+                dict(range=[dfc['ssim'].min(), dfc['ssim'].max()], constraintrange=constraints[1],
                      label='SSIM', values=dfc['ssim']),
-                dict(range=[dfc['psnr_y'].min(), dfc['psnr_y'].max()],
+                dict(range=[dfc['psnr_y'].min(), dfc['psnr_y'].max()], constraintrange=constraints[2],
                      label='PSNR Y', values=dfc['psnr_y']),
-                dict(range=[dfc['psnr_rgb'].min(), dfc['psnr_rgb'].max()],
+                dict(range=[dfc['psnr_rgb'].min(), dfc['psnr_rgb'].max()], constraintrange=constraints[3],
                      label='PSNR RGB', values=dfc['psnr_rgb']),
-                dict(range=[0, len(dfc) - 1],
+                dict(range=[0, len(dfc) - 1], constraintrange=constraints[4],
                      tickvals=names_ids, ticktext=dfc['name'],
                      label='Name', values=names_ids)
             ]),
