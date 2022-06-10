@@ -19,22 +19,10 @@ from plots import parallel_plot, scatter_plot
 
 csv_avg = Path("./assets/test_results_isb.csv")
 csv_all = Path("./assets/test_results_all_isb.csv")
-highlights = [
-    "00000_BSRGAN_isb_7_3.png",
-    "00000_BSRGAN_isb_7_freeze_99.png",
-    "00000_BSRGAN_isb_7_t5_78.png",
-    "00010_BSRGAN_isb_7_t5_78.png",
-    "00011_BSRGAN_isb_2_3.png",
-    "00029_BSRGAN_isb_7_freeze_12.png",
-    "00029_BSRGAN_isb_7_freeze_99.png",
-    "00029_BSRGAN_isb_7_t5_30.png",
-    "00069_BSRGAN_isb_2_3.png",
-    "00069_BSRGAN_isb_7_freeze_99.png",
-    "00438_BSRGAN_isb_7_t5_78.png"
-]
 types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
+highlights = [f.name for f in Path("static/imgs/isb_test_h265").iterdir()]
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -49,7 +37,7 @@ def make_query(avg: bool = False) -> str:
     else:
         query_list = [v for v in queries.values() if v != ""]
     query = " & ".join(query_list)
-    print(query)
+    print("query:", query)
     return query
 
 
@@ -73,9 +61,12 @@ div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick'
                                   figure=par, id=f"my-graph-pp", style={'height': 500}),
                         className='row')
 div_scatter = html.Div([
-    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
+    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                        figure=scat, id=f"my-graph-sp"), id=f"my-div-sp", className='col-8'),
-    html.Div(id=f"my-img", className='col-4')
+    html.Div([html.Div(f"Please, select a star point from the scatter plot",
+                       style={"margin-top": 10, "margin-bottom": 10}),
+              html.Div(id=f"my-img")
+              ], className='col-4')
 ], className='row')
 
 metrics_label = html.Label("Metrics:", style={'font-weight': 'bold', "text-align": "center", 'margin-bottom': 10})
@@ -145,6 +136,7 @@ def update_sp_buttons(drop_mc, radio_ds, radio_cp):
 
     new_scat = scatter_plot(updated_dfs, m1, m2, highlights)
     new_scat.update_layout(margin=dict(l=20, r=20, t=20, b=20))
+    print("constraint_ranges:", constraint_ranges)
     new_par = parallel_plot(updated_dfp, constraint_ranges)
     return new_scat, new_par, str(len(updated_dfs))
 
@@ -188,6 +180,7 @@ def update_sp_parallel(selection, old_scat, old_par):
         queries["parallel"] = f"category in {[t for t in traces]}"
         updated_df = curr_dfs.query(make_query())
         new_scat = scatter_plot(updated_df, m1, m2, highlights)
+        print("constraint_ranges:", constraint_ranges)
         return new_scat, old_par, str(len(updated_df))
 
 
@@ -199,12 +192,14 @@ def update_sp_parallel(selection, old_scat, old_par):
 def display_click_data(click_data, graph):
     if click_data is not None:
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
-        name = click_data['points'][0]['text']
-        gt_name = name.split("_")[0] + ".png"
         print("click:", click_data, "\n", trace, "\n")
+        name = click_data['points'][0]['text']
+        suffix = "isb_test_h265" if "vid" in trace else "isb_test_webp"
+        img_path = f"imgs/{suffix}/{name}"
+        gt_name = name.split("_")[0] + ".png"
         new_div = html.Div([
-            html.Img(src=f"imgs/{gt_name}", height=395),
-            html.Img(src=f"imgs/{name}", height=395),
+            html.Img(src=f"imgs/gt/{gt_name}", height=395),
+            html.Img(src=img_path, height=395),
             html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
         ])
         return new_div
