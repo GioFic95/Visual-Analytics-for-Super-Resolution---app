@@ -11,8 +11,9 @@ import dash_bootstrap_components as dbc
 from whitenoise import WhiteNoise
 try:
     import gunicorn
+    from flask_basicauth import BasicAuth
 except ModuleNotFoundError:
-    print("gunicord not found")
+    print("gunicord or Flask-BasicAuth not found")
 
 from plots import parallel_plot, scatter_plot
 
@@ -46,6 +47,10 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
+
+app.config['BASIC_AUTH_USERNAME'] = 'WsenseCV'
+app.config['BASIC_AUTH_PASSWORD'] = '3JVRa8oihQmP53kV'
+app.config['BASIC_AUTH_FORCE'] = True
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)

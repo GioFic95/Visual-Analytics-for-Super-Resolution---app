@@ -5,3 +5,4 @@ gunicorn
 numpy
 pandas
 whitenoise
+Flask-BasicAuth
