@@ -50,6 +50,7 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
 app.config['BASIC_AUTH_USERNAME'] = 'WsenseCV'
 app.config['BASIC_AUTH_PASSWORD'] = '3JVRa8oihQmP53kV'
+basic_auth = BasicAuth(app)
 app.config['BASIC_AUTH_FORCE'] = True
 
 curr_dfp = get_df(csv_avg, types)
