@@ -8,10 +8,10 @@ import pandas as pd
 import dash
 from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
+import dash_auth
 from whitenoise import WhiteNoise
 try:
     import gunicorn
-    from flask_basicauth import BasicAuth
 except ModuleNotFoundError:
     print("gunicord or Flask-BasicAuth not found")
 
@@ -45,13 +45,12 @@ def make_query(avg: bool = False) -> str:
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
+auth = dash_auth.BasicAuth(
+    app,
+    {'WsenseCV': '3JVRa8oihQmP53kV'}
+)
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
-
-app.config['BASIC_AUTH_USERNAME'] = 'WsenseCV'
-app.config['BASIC_AUTH_PASSWORD'] = '3JVRa8oihQmP53kV'
-basic_auth = BasicAuth(app)
-app.config['BASIC_AUTH_FORCE'] = True
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
