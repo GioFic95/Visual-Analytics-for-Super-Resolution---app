@@ -47,7 +47,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
 auth = dash_auth.BasicAuth(
     app,
-    {'WsenseCV': '3JVRa8oihQmP53kV'}
+    {os.environ.get('USER', None): os.environ.get('PASS', None)}
 )
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
