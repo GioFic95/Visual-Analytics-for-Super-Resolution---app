@@ -45,7 +45,7 @@ def make_query(avg: bool = False) -> str:
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
-print(os.environ.get('USER', None), os.environ.get('PASS', None))
+print("basic auth:", os.environ.get('USER', None), os.environ.get('PASS', None))
 auth = dash_auth.BasicAuth(
     app,
     {os.environ.get('USER', None): os.environ.get('PASS', None)}
