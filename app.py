@@ -11,6 +11,7 @@ from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
 import dash_auth
 from whitenoise import WhiteNoise
+import google.oauth2.credentials
 from google_auth_oauthlib import flow
 try:
     import gunicorn
@@ -58,17 +59,21 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
 client_secrets = json.loads(os.environ.get("client_secrets", None))
-appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
-    client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
-)
-print("appflow", appflow)
-out = appflow.run_local_server(port=0)
-print("out:", out)
-credentials = appflow.credentials
-print("credentials:", credentials)
-# authorization_url, state = flow.authorization_url(
-#     access_type='offline',
-#     include_granted_scopes='true')
+
+# appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
+#     client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
+# )
+# out = appflow.run_local_server(port=0)
+# credentials = appflow.credentials
+# print("credentials:", credentials)
+
+flow = flow.Flow.from_client_config(
+    client_secrets,
+    scopes=['https://www.googleapis.com/auth/drive.readonly'])
+flow.redirect_uri = 'https://www.example.com/oauth2callback'
+authorization_url, state = flow.authorization_url(
+    access_type='offline',
+    include_granted_scopes='true')
 
 # try:
 #         # create gmail api client
@@ -145,7 +150,9 @@ div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div], c
 
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
-app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
+div_auth = html.Div(html.Link("Click to authorize Google Drive", href=authorization_url, target="_blank"))
+
+app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
 
 
 @app.callback(
