@@ -18,12 +18,13 @@ except ModuleNotFoundError:
 from plots import parallel_plot, scatter_plot
 
 
-csv_avg = Path("./assets/test_results_isb.csv")
-csv_all = Path("./assets/test_results_all_isb.csv")
+csv_avg = Path("./assets/test_results.csv")
+csv_all = Path("./assets/test_results_all.csv")
 types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
-highlights = [f.name for f in Path("static/imgs/isb_test_h265").iterdir()]
+ds_suffix = "saipem"
+highlights = [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -199,11 +200,11 @@ def display_click_data(click_data, graph):
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
-        suffix = "isb_test_h265" if "vid" in trace else "isb_test_webp"
+        suffix = f"{ds_suffix}_test_h265" if "vid" in trace else "{ds_suffix}_test_webp"
         img_path = f"imgs/{suffix}/{name}"
         gt_name = name.split("_")[0] + ".png"
         new_div = html.Div([
-            html.Img(src=f"imgs/gt/{gt_name}", height=395),
+            html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
             html.Img(src=img_path, height=395),
             html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
         ])
