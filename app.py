@@ -58,12 +58,10 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
 client_secrets = json.loads(os.environ.get("client_secrets", None))
-print("client_secrets:", client_secrets)
 appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
     client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
 )
-print("appflow", appflow, type(appflow), dir(appflow))
-appflow.run_local_server()
+appflow.run_local_server(port=0)
 credentials = appflow.credentials
 print("credentials", credentials)
 # authorization_url, state = flow.authorization_url(
