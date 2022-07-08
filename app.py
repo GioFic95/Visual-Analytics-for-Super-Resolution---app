@@ -10,6 +10,7 @@ from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
 import dash_auth
 from whitenoise import WhiteNoise
+from google_auth_oauthlib import flow
 try:
     import gunicorn
 except ModuleNotFoundError:
@@ -52,6 +53,13 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
 # )
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
+
+appflow = flow.InstalledAppFlow.from_client_config(
+    "client_secrets.json", scopes=["https://www.googleapis.com/auth/drive.readonly"]
+)
+appflow.run_local_server()
+credentials = appflow.credentials
+print("credentials", credentials)
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
