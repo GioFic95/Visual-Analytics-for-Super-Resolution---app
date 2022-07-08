@@ -62,6 +62,7 @@ print("client_secrets:", client_secrets)
 appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
     client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
 )
+print("appflow", appflow, type(appflow), dir(appflow))
 appflow.run_local_server()
 credentials = appflow.credentials
 print("credentials", credentials)
