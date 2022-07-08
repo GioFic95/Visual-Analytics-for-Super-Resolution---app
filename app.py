@@ -1,4 +1,5 @@
 import itertools
+import json
 import os
 from pathlib import Path
 from typing import List, Dict
@@ -56,8 +57,10 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
+client_secrets = json.loads(os.environ.get("client_secrets", None))
+print("client_secrets:", client_secrets)
 appflow = flow.Flow.from_client_config(
-    os.environ.get("client_secrets", None), scopes=["https://www.googleapis.com/auth/drive.readonly"]
+    client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
 )
 appflow.run_local_server()
 credentials = appflow.credentials
