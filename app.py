@@ -54,12 +54,41 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
-appflow = flow.InstalledAppFlow.from_client_config(
-    "client_secrets.json", scopes=["https://www.googleapis.com/auth/drive.readonly"]
+# https://cloud.google.com/docs/authentication/end-user
+# https://developers.google.com/identity/protocols/oauth2/web-server#python
+appflow = flow.Flow.from_client_config(
+    os.environ.get("client_secrets", None), scopes=["https://www.googleapis.com/auth/drive.readonly"]
 )
 appflow.run_local_server()
 credentials = appflow.credentials
 print("credentials", credentials)
+# authorization_url, state = flow.authorization_url(
+#     access_type='offline',
+#     include_granted_scopes='true')
+
+# try:
+#         # create gmail api client
+#         service = build('drive', 'v3', credentials=creds)
+#         files = []
+#         page_token = None
+#         while True:
+#             # pylint: disable=maybe-no-member
+#             response = service.files().list(q="mimeType='image/jpeg'",
+#                                             spaces='drive',
+#                                             fields='nextPageToken, '
+#                                                    'files(id, name)',
+#                                             pageToken=page_token).execute()
+#             for file in response.get('files', []):
+#                 # Process change
+#                 print(F'Found file: {file.get("name")}, {file.get("id")}')
+#             files.extend(response.get('files', []))
+#             page_token = response.get('nextPageToken', None)
+#             if page_token is None:
+#                 break
+#
+# except HttpError as error:
+#     print(F'An error occurred: {error}')
+#     files = None
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
