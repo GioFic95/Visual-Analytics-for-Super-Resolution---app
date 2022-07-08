@@ -150,7 +150,7 @@ div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div], c
 
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
-div_auth = html.Div(html.Link("Click to authorize Google Drive", href=authorization_url, target="_blank"))
+div_auth = html.Div(dcc.Link("Click to authorize Google Drive", href=authorization_url, target="_blank"))
 
 app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
 
