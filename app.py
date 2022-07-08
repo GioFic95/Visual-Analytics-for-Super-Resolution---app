@@ -61,7 +61,8 @@ client_secrets = json.loads(os.environ.get("client_secrets", None))
 appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
     client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
 )
-appflow.run_local_server(port=0)
+out = appflow.run_local_server(port=0)
+print("out", out)
 credentials = appflow.credentials
 print("credentials", credentials)
 # authorization_url, state = flow.authorization_url(
