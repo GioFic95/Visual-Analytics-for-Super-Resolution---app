@@ -24,7 +24,7 @@ types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips"
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
-highlights = [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
+highlights = []  # [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -46,10 +46,10 @@ def make_query(avg: bool = False) -> str:
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
-auth = dash_auth.BasicAuth(
-    app,
-    {os.environ.get('USER', None): os.environ.get('PASS', None)}
-)
+# auth = dash_auth.BasicAuth(
+#     app,
+#     {os.environ.get('USER', None): os.environ.get('PASS', None)}
+# )
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
