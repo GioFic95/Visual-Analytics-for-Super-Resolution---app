@@ -70,7 +70,7 @@ client_secrets = json.loads(os.environ.get("client_secrets", None))
 flow = flow.Flow.from_client_config(
     client_secrets,
     scopes=['https://www.googleapis.com/auth/drive.readonly'])
-flow.redirect_uri = 'https://www.example.com/oauth2callback'
+flow.redirect_uri = 'https://sleepy-ravine-64876.herokuapp.com'
 authorization_url, state = flow.authorization_url(
     access_type='offline',
     include_granted_scopes='true')
