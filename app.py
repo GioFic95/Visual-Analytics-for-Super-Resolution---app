@@ -13,6 +13,7 @@ import dash_auth
 from whitenoise import WhiteNoise
 import google.oauth2.credentials
 from google_auth_oauthlib import flow
+import flask
 try:
     import gunicorn
 except ModuleNotFoundError:
@@ -129,19 +130,21 @@ div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30}
 
 div_auth = html.Div([
     html.A("Click to authorize Google Drive", href=authorization_url),  # , target="_blank"
-    dcc.Location(id='url', refresh=False)
+    dcc.Location(id='url', refresh=False),
+    html.Label("non authorized", id='credentials')
 ])
 
 app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
 
 
 @app.callback(
+    Output('credentials', 'children'),
     Input('url', 'href')
 )
 def complete_auth(pathname):
     flow.fetch_token(authorization_response=pathname)
     credentials = flow.credentials
-    print("compete auth:", pathname, credentials)
+    print("complete auth:", pathname, credentials)
 
     # try:
     #     service = build('drive', 'v3', credentials=creds)
@@ -164,6 +167,8 @@ def complete_auth(pathname):
     # except HttpError as error:
     #     print(F'An error occurred: {error}')
     #     files = None
+
+    return f"complete auth: {pathname}, {credentials}"
 
 
 @app.callback(
