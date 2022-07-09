@@ -144,6 +144,8 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
     Input('url', 'href')
 )
 def complete_auth(pathname):
+    # https://developers.google.com/drive/api/guides/search-files#python
+    # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
@@ -156,9 +158,11 @@ def complete_auth(pathname):
             while True:
                 response = service.files().list(q="mimeType='image' and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents",
                                                 # spaces='drive',
+                                                page_size=1000,
                                                 fields='nextPageToken, '
                                                        'files(id, name, webContentLink)',
                                                 pageToken=page_token).execute()
+                print("response:", response)
                 files.extend(response.get('files', []))
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
@@ -166,7 +170,7 @@ def complete_auth(pathname):
         except HttpError as error:
             print(F'An error occurred: {error}')
             files = None
-
+        print("files:", files)
         return f"complete auth: {pathname}, {credentials}, {' '.join(f['name'] for f in files)}"
     except Exception as mse:
         print("ERROR:", mse)
