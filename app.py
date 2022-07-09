@@ -74,30 +74,7 @@ flow.redirect_uri = 'https://sleepy-ravine-64876.herokuapp.com'
 authorization_url, state = flow.authorization_url(
     access_type='offline',
     include_granted_scopes='true')
-
-# try:
-#         # create gmail api client
-#         service = build('drive', 'v3', credentials=creds)
-#         files = []
-#         page_token = None
-#         while True:
-#             # pylint: disable=maybe-no-member
-#             response = service.files().list(q="mimeType='image/jpeg'",
-#                                             spaces='drive',
-#                                             fields='nextPageToken, '
-#                                                    'files(id, name)',
-#                                             pageToken=page_token).execute()
-#             for file in response.get('files', []):
-#                 # Process change
-#                 print(F'Found file: {file.get("name")}, {file.get("id")}')
-#             files.extend(response.get('files', []))
-#             page_token = response.get('nextPageToken', None)
-#             if page_token is None:
-#                 break
-#
-# except HttpError as error:
-#     print(F'An error occurred: {error}')
-#     files = None
+print("authorization:", authorization_url, state)
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
@@ -150,9 +127,43 @@ div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div], c
 
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
-div_auth = html.Div(dcc.Link("Click to authorize Google Drive", href=authorization_url, target="_blank"))
+div_auth = html.Div([
+    dcc.Link("Click to authorize Google Drive", href=authorization_url),  # , target="_blank"
+    dcc.Location(id='url', refresh=False)
+])
 
 app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
+
+
+@app.callback(
+    Input('url', 'href')
+)
+def complete_auth(pathname):
+    flow.fetch_token(authorization_response=pathname)
+    credentials = flow.credentials
+    print("compete auth:", pathname, credentials)
+
+    # try:
+    #     service = build('drive', 'v3', credentials=creds)
+    #     files = []
+    #     page_token = None
+    #     while True:
+    #         # pylint: disable=maybe-no-member
+    #         response = service.files().list(q="mimeType='image/jpeg'",
+    #                                         spaces='drive',
+    #                                         fields='nextPageToken, '
+    #                                                'files(id, name)',
+    #                                         pageToken=page_token).execute()
+    #         for file in response.get('files', []):
+    #             # Process change
+    #             print(F'Found file: {file.get("name")}, {file.get("id")}')
+    #         files.extend(response.get('files', []))
+    #         page_token = response.get('nextPageToken', None)
+    #         if page_token is None:
+    #             break
+    # except HttpError as error:
+    #     print(F'An error occurred: {error}')
+    #     files = None
 
 
 @app.callback(
