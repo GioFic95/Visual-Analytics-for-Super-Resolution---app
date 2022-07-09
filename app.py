@@ -13,6 +13,8 @@ import dash_auth
 from whitenoise import WhiteNoise
 import google.oauth2.credentials
 from google_auth_oauthlib import flow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import flask
 try:
     import gunicorn
@@ -142,33 +144,33 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
     Input('url', 'href')
 )
 def complete_auth(pathname):
-    flow.fetch_token(authorization_response=pathname)
-    credentials = flow.credentials
-    print("complete auth:", pathname, credentials)
+    try:
+        flow.fetch_token(authorization_response=pathname)
+        credentials = flow.credentials
+        print("complete auth:", pathname, credentials)
 
-    # try:
-    #     service = build('drive', 'v3', credentials=creds)
-    #     files = []
-    #     page_token = None
-    #     while True:
-    #         # pylint: disable=maybe-no-member
-    #         response = service.files().list(q="mimeType='image/jpeg'",
-    #                                         spaces='drive',
-    #                                         fields='nextPageToken, '
-    #                                                'files(id, name)',
-    #                                         pageToken=page_token).execute()
-    #         for file in response.get('files', []):
-    #             # Process change
-    #             print(F'Found file: {file.get("name")}, {file.get("id")}')
-    #         files.extend(response.get('files', []))
-    #         page_token = response.get('nextPageToken', None)
-    #         if page_token is None:
-    #             break
-    # except HttpError as error:
-    #     print(F'An error occurred: {error}')
-    #     files = None
+        try:
+            service = build('drive', 'v3', credentials=credentials)
+            files = []
+            page_token = None
+            while True:
+                response = service.files().list(q="mimeType='image' and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents",
+                                                # spaces='drive',
+                                                fields='nextPageToken, '
+                                                       'files(id, name, webContentLink)',
+                                                pageToken=page_token).execute()
+                files.extend(response.get('files', []))
+                page_token = response.get('nextPageToken', None)
+                if page_token is None:
+                    break
+        except HttpError as error:
+            print(F'An error occurred: {error}')
+            files = None
 
-    return f"complete auth: {pathname}, {credentials}"
+        return f"complete auth: {pathname}, {credentials}, {' '.join(f['name'] for f in files)}"
+    except Exception as mse:
+        print("ERROR:", mse)
+        return f"authentication failed"
 
 
 @app.callback(
