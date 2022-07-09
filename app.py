@@ -158,7 +158,7 @@ def complete_auth(pathname):
             while True:
                 response = service.files().list(q="mimeType='image' and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents",
                                                 # spaces='drive',
-                                                page_size=1000,
+                                                pageSize=1000,
                                                 fields='nextPageToken, '
                                                        'files(id, name, webContentLink)',
                                                 pageToken=page_token).execute()
