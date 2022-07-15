@@ -177,7 +177,7 @@ def complete_auth(pathname):
         except HttpError as error:
             print(F'An error occurred: {error}')
         print("files:", files, len(files), total)
-        return f"complete auth: {pathname}, {credentials}, {' '.join(f['name'] for f in files)}"
+        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}"
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
         return f"authentication failed"
