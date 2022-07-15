@@ -1,6 +1,7 @@
 import itertools
 import json
 import os
+import traceback
 from pathlib import Path
 from typing import List, Dict
 
@@ -152,6 +153,7 @@ def complete_auth(pathname):
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
         print("complete auth:", pathname, credentials)
+        total = 0
 
         try:
             service = build('drive', 'v3', credentials=credentials)
@@ -166,6 +168,7 @@ def complete_auth(pathname):
                 print("response:", response)
                 # files.extend(response.get('files', []))
                 curr_files = response.get('files', [])
+                total += len(curr_files)
                 for file in curr_files:
                     files[file['name']] = file['webContentLink'][:file['webContentLink'].index("&export")]
                 page_token = response.get('nextPageToken', None)
@@ -173,10 +176,10 @@ def complete_auth(pathname):
                     break
         except HttpError as error:
             print(F'An error occurred: {error}')
-        print("files:", files, "ZZZZZZZ")
+        print("files:", files, len(files), total)
         return f"complete auth: {pathname}, {credentials}, {' '.join(f['name'] for f in files)}"
     except Exception as mse:
-        print("ERROR:", mse)
+        print("ERROR:", mse, traceback.format_exc())
         return f"authentication failed"
 
 
