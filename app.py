@@ -279,6 +279,7 @@ def display_click_data(click_data, graph):
         # suffix = f"{ds_suffix}_test_h265" if "vid" in trace else "{ds_suffix}_test_webp"
         # img_path = f"imgs/{suffix}/{name}"
         gt_name = name.split("_")[0] + ".png"
+        print("OOOOOOOH", files, gt_name)
         print("AAAAAAAAAAAAAA", gt_name, files[gt_name])
         new_div = html.Div([
             # html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
