@@ -167,7 +167,7 @@ def complete_auth(pathname):
                 # files.extend(response.get('files', []))
                 curr_files = response.get('files', [])
                 for file in curr_files:
-                    files[file['name']] = file['webContentLink']
+                    files[file['name']] = file['webContentLink'][:file['webContentLink'].index("&export")]
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
                     break
