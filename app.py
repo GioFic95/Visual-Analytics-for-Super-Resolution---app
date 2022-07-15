@@ -30,7 +30,8 @@ types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips"
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
-highlights = []  # [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
+files = dict()
+highlights = list(files.keys())  # [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -146,7 +147,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 def complete_auth(pathname):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
-    q = "(mimeType='image/png' or mimeType='image/jpeg') and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents"
+    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents"
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
@@ -154,7 +155,6 @@ def complete_auth(pathname):
 
         try:
             service = build('drive', 'v3', credentials=credentials)
-            files = []
             page_token = None
             while True:
                 response = service.files().list(q=q,
@@ -164,7 +164,10 @@ def complete_auth(pathname):
                                                        'files(id, name, webContentLink)',
                                                 pageToken=page_token).execute()
                 print("response:", response)
-                files.extend(response.get('files', []))
+                # files.extend(response.get('files', []))
+                curr_files = response.get('files', [])
+                for file in curr_files:
+                    files[file['name']] = file['webContentLink']
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
                     break
@@ -275,8 +278,9 @@ def display_click_data(click_data, graph):
         img_path = f"imgs/{suffix}/{name}"
         gt_name = name.split("_")[0] + ".png"
         new_div = html.Div([
-            html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
-            html.Img(src=img_path, height=395),
+            # html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
+            html.Img(src=files[{gt_name}], height=395),
+            html.Img(src=files[{gt_name}], height=395),
             html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
         ])
         return new_div
