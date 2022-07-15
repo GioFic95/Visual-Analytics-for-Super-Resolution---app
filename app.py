@@ -278,8 +278,8 @@ def display_click_data(click_data, graph):
         gt_name = name.split("_")[0] + ".png"
         new_div = html.Div([
             # html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
-            html.Img(src=files[{gt_name}], height=395),
-            html.Img(src=files[{gt_name}], height=395),
+            html.Img(src=files[gt_name], height=395),
+            html.Img(src=files[gt_name], height=395),
             html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
         ])
         return new_div
