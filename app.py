@@ -163,7 +163,7 @@ def complete_auth(pathname):
                                                 fields='nextPageToken, '
                                                        'files(id, name, webContentLink, parents)',
                                                 pageToken=page_token).execute()
-                print("response:", response)
+                # print("response:", response)
                 curr_files = response.get('files', [])
                 total += len(curr_files)
                 for file in curr_files:
@@ -180,6 +180,8 @@ def complete_auth(pathname):
                     break
         except HttpError as error:
             print(f'An error occurred: {error}')
+
+        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
         print("files:", files_gt, files_h265, files_imgc, len(files_gt) + len(files_h265) + len(files_imgc), total)
         return f"complete auth: {pathname}"
     except Exception as mse:
