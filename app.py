@@ -31,8 +31,13 @@ types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips"
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
-files = dict()
-highlights = list(files.keys())  # [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
+gdrive_gt = "1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t"
+gdrive_h265 = "1LXScXneRTD2eIsvw_kDm987gpghLydQR"
+gdrive_imgc = "1KcFb-ZDZEQmG1k1sabP7d-qFU5gPczAc"
+files_gt = dict()
+files_h265 = dict()
+files_imgc = dict()
+highlights = list(files_gt.keys())
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -64,13 +69,6 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
 client_secrets = json.loads(os.environ.get("client_secrets", None))
-
-# appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
-#     client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
-# )
-# out = appflow.run_local_server(port=0)
-# credentials = appflow.credentials
-# print("credentials:", credentials)
 
 flow = flow.Flow.from_client_config(
     client_secrets,
@@ -148,7 +146,8 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 def complete_auth(pathname):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
-    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents"
+    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
+        f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
@@ -160,24 +159,29 @@ def complete_auth(pathname):
             page_token = None
             while True:
                 response = service.files().list(q=q,
-                                                # spaces='drive',
                                                 pageSize=1000,
                                                 fields='nextPageToken, '
-                                                       'files(id, name, webContentLink)',
+                                                       'files(id, name, webContentLink, parents)',
                                                 pageToken=page_token).execute()
                 print("response:", response)
-                # files.extend(response.get('files', []))
                 curr_files = response.get('files', [])
                 total += len(curr_files)
                 for file in curr_files:
-                    files[file['name']] = file['webContentLink']
+                    if gdrive_gt in file['parents']:
+                        files_gt[file['name']] = file['webContentLink']
+                    elif gdrive_h265 in file['parents']:
+                        files_h265[file['name']] = file['webContentLink']
+                    elif gdrive_imgc in file['parents']:
+                        files_imgc[file['name']] = file['webContentLink']
+                    else:
+                        raise ValueError("unrecognized parent")
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
                     break
         except HttpError as error:
-            print(F'An error occurred: {error}')
-        print("files:", files, len(files), total)
-        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}"
+            print(f'An error occurred: {error}')
+        print("files:", files_gt, files_h265, files_imgc, len(files_gt) + len(files_h265) + len(files_imgc), total)
+        return f"complete auth: {pathname}"
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
         return f"authentication failed"
@@ -276,17 +280,20 @@ def display_click_data(click_data, graph):
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
-        # suffix = f"{ds_suffix}_test_h265" if "vid" in trace else "{ds_suffix}_test_webp"
-        # img_path = f"imgs/{suffix}/{name}"
         gt_name = name.split("_")[0] + ".png"
-        print("OOOOOOOH", files, gt_name)
-        print("AAAAAAAAAAAAAA", gt_name, files[gt_name])
-        new_div = html.Div([
-            # html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
-            html.Img(src=files[gt_name], height=395),
-            html.Img(src=files[gt_name], height=395),
-            html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
-        ])
+        print("OOOOOOOH", gt_name, files_gt, files_h265, files_imgc)
+        print("AAAAAAAAAAAAAA", gt_name, files_gt[gt_name])
+        res_img = files_h265.get(name, None) or files_imgc.get(name, None)
+        try:
+            new_div = html.Div([
+                html.Img(src=files_gt[gt_name], height=395),
+                html.Img(src=res_img, height=395),
+                html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
+            ])
+        except KeyError:
+            new_div = html.Div([
+                "You must select a star point."
+            ])
         return new_div
     else:
         return None
@@ -295,4 +302,3 @@ def display_click_data(click_data, graph):
 if __name__ == '__main__':
     print("server:", server)
     app.run(debug=True, use_reloader=False)
-    # app.run_server(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
