@@ -37,7 +37,7 @@ gdrive_imgc = "1KcFb-ZDZEQmG1k1sabP7d-qFU5gPczAc"
 files_gt = dict()
 files_h265 = dict()
 files_imgc = dict()
-highlights = list(files_gt.keys())
+highlights = list(files_h265.keys()) + list(files_imgc.keys())
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -281,7 +281,7 @@ def display_click_data(click_data, graph):
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         gt_name = name.split("_")[0] + ".png"
-        print("OOOOOOOH", gt_name, files_gt, files_h265, files_imgc)
+        print("OOOOOOOH", gt_name, name, files_gt, files_h265, files_imgc)
         res_img = files_h265.get(name, None) or files_imgc.get(name, None)
         print("AAAAAAAAAA", gt_name, files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
         try:
@@ -292,7 +292,7 @@ def display_click_data(click_data, graph):
             ])
         except KeyError:
             new_div = html.Div([
-                "You must select a star point."
+                "You must select a star."
             ])
         return new_div
     else:
