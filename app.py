@@ -188,7 +188,8 @@ def complete_auth(pathname):
         return f"complete auth: {pathname}", scat
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
-        return f"authentication failed"
+        scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+        return f"authentication failed", scat
 
 
 @app.callback(
