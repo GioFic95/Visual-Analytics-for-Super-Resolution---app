@@ -141,6 +141,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 
 @app.callback(
     Output('credentials', 'children'),
+    Output('my-graph-sp', 'figure'),
     Input('url', 'href')
 )
 def complete_auth(pathname):
@@ -181,9 +182,10 @@ def complete_auth(pathname):
         except HttpError as error:
             print(f'An error occurred: {error}')
 
-        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
         print("files:", files_gt, files_h265, files_imgc, len(files_gt) + len(files_h265) + len(files_imgc), total)
-        return f"complete auth: {pathname}"
+        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
+        scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+        return f"complete auth: {pathname}", scat
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
         return f"authentication failed"
