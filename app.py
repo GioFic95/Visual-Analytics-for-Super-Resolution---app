@@ -282,8 +282,8 @@ def display_click_data(click_data, graph):
         name = click_data['points'][0]['text']
         gt_name = name.split("_")[0] + ".png"
         print("OOOOOOOH", gt_name, files_gt, files_h265, files_imgc)
-        print("AAAAAAAAAAAAAA", gt_name, files_gt[gt_name])
         res_img = files_h265.get(name, None) or files_imgc.get(name, None)
+        print("AAAAAAAAAA", gt_name, files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
         try:
             new_div = html.Div([
                 html.Img(src=files_gt[gt_name], height=395),
