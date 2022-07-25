@@ -32,7 +32,7 @@ types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips"
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
 files = dict()
-highlights = list(files.keys())  # [f.name for f in Path(f"static/imgs/{ds_suffix}_test_h265").iterdir()]
+highlights = []
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -136,6 +136,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 
 @app.callback(
     Output('credentials', 'children'),
+    Output('my-graph-sp', 'figure'),
     Input('url', 'href')
 )
 def complete_auth(pathname):
@@ -169,10 +170,14 @@ def complete_auth(pathname):
         except HttpError as error:
             print(f'An error occurred: {error}')
         print("files:", files, len(files), total)
-        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}"
+
+        highlights = list(files.keys())
+        new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}", new_scat
+
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
-        return f"authentication failed"
+        return f"authentication failed", scat
 
 
 @app.callback(
@@ -269,9 +274,9 @@ def display_click_data(click_data, graph):
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         gt_name = name.split("_")[0] + ".png"
-        print("OOOOOOOH", files, gt_name)
-        print("AAAAAAAAAAAAAA", gt_name, files[gt_name])
         try:
+            print("OOOOOOOH", files, gt_name)
+            print("AAAAAAAAAAAAAA", gt_name, files[gt_name])
             new_div = html.Div([
                 html.Img(src=files[gt_name], height=395),
                 html.Img(src=files[gt_name], height=395),
