@@ -31,7 +31,12 @@ types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips"
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
-files = dict()
+gdrive_gt = "1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t"
+gdrive_h265 = "1LXScXneRTD2eIsvw_kDm987gpghLydQR"
+gdrive_imgc = "1KcFb-ZDZEQmG1k1sabP7d-qFU5gPczAc"
+files_gt = dict()
+files_h265 = dict()
+files_imgc = dict()
 highlights = []
 
 
@@ -142,7 +147,8 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 def complete_auth(pathname):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
-    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and '1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t' in parents"
+    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
+        f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents"
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
@@ -163,19 +169,26 @@ def complete_auth(pathname):
                 curr_files = response.get('files', [])
                 total += len(curr_files)
                 for file in curr_files:
-                    files[file['name']] = file['webContentLink']
+                    if gdrive_gt in file['parents']:
+                        files_gt[file['name']] = file['webContentLink']
+                    elif gdrive_h265 in file['parents']:
+                        files_h265[file['name']] = file['webContentLink']
+                    elif gdrive_imgc in file['parents']:
+                        files_imgc[file['name']] = file['webContentLink']
+                    else:
+                        raise ValueError("unrecognized parent")
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
                     break
         except HttpError as error:
             print(f'An error occurred: {error}')
-        print("files:", files, len(files), total)
 
-        highlights = list(files.keys())
+        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
+        print("files:", files_gt, highlights, len(highlights)+len(files_gt), total)
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}", new_div
+        return f"complete auth: {pathname}, {credentials}", new_div
 
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
