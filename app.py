@@ -175,7 +175,7 @@ def complete_auth(pathname):
                 if page_token is None:
                     break
         except HttpError as error:
-            print(F'An error occurred: {error}')
+            print(f'An error occurred: {error}')
         print("files:", files, len(files), total)
         return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}"
     except Exception as mse:
