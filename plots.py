@@ -33,6 +33,7 @@ def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None,
 
 
 def scatter_plot(df: pd.DataFrame, x: str, y: str, highlights: List[str] = []):
+    print("new scatter plot with highlights", highlights)
     scatter = go.Figure()
 
     for category, dfg in df.groupby("category"):
