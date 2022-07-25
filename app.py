@@ -136,7 +136,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 
 @app.callback(
     Output('credentials', 'children'),
-    Output('my-graph-sp', 'figure'),
+    Output('my-div-sp', 'children'),
     Input('url', 'href')
 )
 def complete_auth(pathname):
@@ -173,11 +173,15 @@ def complete_auth(pathname):
 
         highlights = list(files.keys())
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
-        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}", new_scat
+        new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                            figure=new_scat, id=f"my-graph-sp")
+        return f"complete auth: {pathname}, {credentials}, {' '.join(f for f in files)}", new_div
 
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
-        return f"authentication failed", scat
+        new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                            figure=scat, id=f"my-graph-sp")
+        return f"authentication failed", new_div
 
 
 @app.callback(
