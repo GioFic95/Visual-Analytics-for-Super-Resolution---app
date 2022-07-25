@@ -65,13 +65,6 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
 client_secrets = json.loads(os.environ.get("client_secrets", None))
 
-# appflow = flow.InstalledAppFlow.from_client_config(  # flow.Flow.from_client_config(
-#     client_secrets, scopes=["https://www.googleapis.com/auth/drive.readonly"]
-# )
-# out = appflow.run_local_server(port=0)
-# credentials = appflow.credentials
-# print("credentials:", credentials)
-
 flow = flow.Flow.from_client_config(
     client_secrets,
     scopes=['https://www.googleapis.com/auth/drive.readonly'])
@@ -163,10 +156,9 @@ def complete_auth(pathname):
                                                 # spaces='drive',
                                                 pageSize=1000,
                                                 fields='nextPageToken, '
-                                                       'files(id, name, webContentLink)',
+                                                       'files(id, name, webContentLink, parents)',
                                                 pageToken=page_token).execute()
                 print("response:", response)
-                # files.extend(response.get('files', []))
                 curr_files = response.get('files', [])
                 total += len(curr_files)
                 for file in curr_files:
@@ -276,17 +268,19 @@ def display_click_data(click_data, graph):
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
-        # suffix = f"{ds_suffix}_test_h265" if "vid" in trace else "{ds_suffix}_test_webp"
-        # img_path = f"imgs/{suffix}/{name}"
         gt_name = name.split("_")[0] + ".png"
         print("OOOOOOOH", files, gt_name)
         print("AAAAAAAAAAAAAA", gt_name, files[gt_name])
-        new_div = html.Div([
-            # html.Img(src=f"imgs/{ds_suffix}_gt/{gt_name}", height=395),
-            html.Img(src=files[gt_name], height=395),
-            html.Img(src=files[gt_name], height=395),
-            html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
-        ])
+        try:
+            new_div = html.Div([
+                html.Img(src=files[gt_name], height=395),
+                html.Img(src=files[gt_name], height=395),
+                html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
+            ])
+        except KeyError:
+            new_div = html.Div([
+                "You must select a star."
+            ])
         return new_div
     else:
         return None
@@ -295,4 +289,3 @@ def display_click_data(click_data, graph):
 if __name__ == '__main__':
     print("server:", server)
     app.run(debug=True, use_reloader=False)
-    # app.run_server(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
