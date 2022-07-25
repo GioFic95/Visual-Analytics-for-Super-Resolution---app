@@ -182,9 +182,9 @@ def complete_auth(pathname):
                     break
         except HttpError as error:
             print(f'An error occurred: {error}')
+        print("files:", files_gt, files_h265, files_imgc, len(files_h265) + len(files_imgc) + len(files_gt), total)
 
         highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
-        print("files:", files_gt, highlights, len(highlights)+len(files_gt), total)
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
