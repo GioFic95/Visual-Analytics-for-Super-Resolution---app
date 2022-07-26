@@ -220,21 +220,32 @@ def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par):
 def update_sp_buttons(drop_mc, radio_ds, radio_cp):
     print('update_sp', drop_mc, radio_ds, radio_cp)
 
+    count = len(curr_dfs)
     m1, m2 = str(drop_mc).split(" VS ")
     last_m12[0:2] = m1, m2
     queries["dataset"] = f"train == '{radio_ds}'" if radio_ds != "" else ""
     queries["compression"] = f"type == '{radio_cp}'" if radio_cp != "" else ""
-    query_dfs = make_query()
-    query_dfp = make_query(avg=True)
-    updated_dfs = curr_dfs.query(query_dfs) if len(query_dfs) > 0 else curr_dfs
-    updated_dfp = curr_dfp.query(query_dfp) if len(query_dfp) > 0 else curr_dfp
-    print(updated_dfs.shape, updated_dfp.shape)
 
-    new_scat = scatter_plot(updated_dfs, m1, m2, highlights)
-    new_scat.update_layout(margin=dict(l=20, r=20, t=20, b=20))
-    print("constraint_ranges:", constraint_ranges)
-    new_par = parallel_plot(updated_dfp, constraint_ranges)
-    return new_scat, new_par, str(len(updated_dfs))
+    query_dfs = make_query()
+    if len(query_dfs):
+        updated_dfs = curr_dfs.query(query_dfs)
+        print(updated_dfs.shape)
+        new_scat = scatter_plot(updated_dfs, m1, m2, highlights)
+        new_scat.update_layout(margin=dict(l=20, r=20, t=20, b=20))
+        count = len(updated_dfs)
+    else:
+        new_scat = scat
+
+    query_dfp = make_query(avg=True)
+    if len(query_dfp) > 0:
+        updated_dfp = curr_dfp.query(query_dfp)
+        print(updated_dfp.shape)
+        print("constraint_ranges:", constraint_ranges)
+        new_par = parallel_plot(updated_dfp, constraint_ranges)
+    else:
+        new_par = par
+
+    return new_scat, new_par, str(count)
 
 
 def update_sp_parallel(selection, old_scat, old_par):
