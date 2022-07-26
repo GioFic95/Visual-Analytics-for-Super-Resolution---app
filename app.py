@@ -142,9 +142,10 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 @app.callback(
     Output('credentials', 'children'),
     Output('my-div-sp', 'children'),
-    Input('url', 'href')
+    Input('url', 'href'),
+    State('my-graph-sp', 'figure')
 )
-def complete_auth(pathname):
+def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
@@ -193,7 +194,7 @@ def complete_auth(pathname):
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
-                            figure=scat, id=f"my-graph-sp")
+                            figure=old_scat, id=f"my-graph-sp")
         return f"authentication failed", new_div
 
 
@@ -211,13 +212,15 @@ def complete_auth(pathname):
 def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
-    if trigger == "my-graph-pp":
+    if trigger is None:
+        return old_scat, old_par, str(len(curr_dfs))
+    elif trigger == "my-graph-pp":
         return update_sp_parallel(selection, old_scat, old_par)
     else:
-        return update_sp_buttons(drop_mc, radio_ds, radio_cp)
+        return update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par)
 
 
-def update_sp_buttons(drop_mc, radio_ds, radio_cp):
+def update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par):
     print('update_sp', drop_mc, radio_ds, radio_cp)
 
     count = len(curr_dfs)
@@ -234,16 +237,16 @@ def update_sp_buttons(drop_mc, radio_ds, radio_cp):
         new_scat.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         count = len(updated_dfs)
     else:
-        new_scat = scat
+        new_scat = old_scat
 
     query_dfp = make_query(avg=True)
     if len(query_dfp) > 0:
         updated_dfp = curr_dfp.query(query_dfp)
         print(updated_dfp.shape)
-        print("constraint_ranges:", constraint_ranges)
+        print("constraint_ranges update_sp_buttons:", constraint_ranges)
         new_par = parallel_plot(updated_dfp, constraint_ranges)
     else:
-        new_par = par
+        new_par = old_par
 
     return new_scat, new_par, str(count)
 
@@ -287,7 +290,7 @@ def update_sp_parallel(selection, old_scat, old_par):
         queries["parallel"] = f"category in {[t for t in traces]}"
         updated_df = curr_dfs.query(make_query())
         new_scat = scatter_plot(updated_df, m1, m2, highlights)
-        print("constraint_ranges:", constraint_ranges)
+        print("constraint_ranges update_sp_parallel:", constraint_ranges)
         return new_scat, old_par, str(len(updated_df))
 
 
@@ -302,12 +305,13 @@ def display_click_data(click_data, graph):
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         gt_name = name.split("_")[0] + ".png"
+        print("OOOOOOOH", gt_name, name, files_gt, files_h265, files_imgc)
+        res_img = files_h265.get(name, None) or files_imgc.get(name, None)
+        print("AAAAAAAAA", gt_name, files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
         try:
-            print("OOOOOOOH", files, gt_name)
-            print("AAAAAAAAAAAAAA", gt_name, files[gt_name])
             new_div = html.Div([
-                html.Img(src=files[gt_name], height=395),
-                html.Img(src=files[gt_name], height=395),
+                html.Img(src=files_gt[gt_name], height=395),
+                html.Img(src=res_img, height=395),
                 html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
             ])
         except KeyError:
