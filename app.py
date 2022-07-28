@@ -16,7 +16,7 @@ import google.oauth2.credentials
 from google_auth_oauthlib import flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import flask
+from flask import request
 try:
     import gunicorn
 except ModuleNotFoundError:
@@ -64,7 +64,8 @@ auth = dash_auth.BasicAuth(
     {os.environ.get('USER1', None): os.environ.get('PASS1', None),
      os.environ.get('USER2', None): os.environ.get('PASS2', None)}
 )
-print("auth:", auth.login_request().data)
+print("auth:", auth, request.authorization['username'])
+
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
