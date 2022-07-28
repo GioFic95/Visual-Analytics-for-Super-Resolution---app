@@ -133,23 +133,29 @@ div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30}
 div_auth = html.Div([
     html.A("Click to authorize Google Drive", href=authorization_url),  # , target="_blank"
     dcc.Location(id='url', refresh=False),
-    html.Label("non authorized", id='credentials')
+    html.Label("non authorized", id='credentials-label')
 ])
 
-app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
+cred_store = dcc.Store(id='credentials-storage')
+
+app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter, cred_store])
 
 
 @app.callback(
-    Output('credentials', 'children'),
+    Output('credentials-label', 'children'),
     Output('my-div-sp', 'children'),
+    Output('credentials-storage', 'data'),
     Input('url', 'href'),
-    State('my-graph-sp', 'figure')
+    State('my-graph-sp', 'figure'),
+    State('credentials-storage', 'data')
 )
-def complete_auth(pathname, old_scat):
+def complete_auth(pathname, old_scat, storage):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
+    print("storage", storage, "ok" if storage else "nok")
+    pathname = storage if storage else pathname
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
@@ -189,13 +195,13 @@ def complete_auth(pathname, old_scat):
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return f"complete auth: {pathname}, {credentials}", new_div
+        return f"complete auth: {pathname}, {credentials}", new_div, pathname
 
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f"authentication failed", new_div
+        return f"authentication failed", new_div, pathname
 
 
 @app.callback(
@@ -307,8 +313,9 @@ def display_click_data(click_data, graph):
         gt_name = name.split("_")[0] + ".png"
         print("OOOOOOOH", gt_name, name, files_gt, files_h265, files_imgc)
         res_img = files_h265.get(name, None) or files_imgc.get(name, None)
-        print("AAAAAAAAA", gt_name, files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
         try:
+            print("AAAAAAAAA", gt_name,
+                  files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
             new_div = html.Div([
                 html.Img(src=files_gt[gt_name], height=395),
                 html.Img(src=res_img, height=395),
