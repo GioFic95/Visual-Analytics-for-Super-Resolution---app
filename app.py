@@ -59,10 +59,11 @@ def make_query(avg: bool = False) -> str:
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
-# auth = dash_auth.BasicAuth(
-#     app,
-#     {os.environ.get('USER', None): os.environ.get('PASS', None)}
-# )
+auth = dash_auth.BasicAuth(
+    app,
+    {os.environ.get('USER', None): os.environ.get('PASS', None)}
+)
+print("auth:", auth)
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
@@ -154,7 +155,7 @@ def complete_auth(pathname, old_scat, storage):
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
-    print("storage", storage, "ok" if storage else "nok")
+    print("storage:", storage, "ok" if storage else "nok")
     pathname = storage if storage else pathname
     try:
         flow.fetch_token(authorization_response=pathname)
@@ -314,8 +315,8 @@ def display_click_data(click_data, graph):
         name = click_data['points'][0]['text']
         gt_name = name.split("_")[0] + ".png"
         print("OOOOOOOH", gt_name, name, files_gt, files_h265, files_imgc)
-        res_img = files_h265.get(name, None) or files_imgc.get(name, None)
         try:
+            res_img = files_h265.get(name, None) or files_imgc[name]
             print("AAAAAAAAA", gt_name,
                   files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
             new_div = html.Div([
