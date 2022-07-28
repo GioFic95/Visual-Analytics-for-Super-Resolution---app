@@ -61,9 +61,10 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
 auth = dash_auth.BasicAuth(
     app,
-    {os.environ.get('USER', None): os.environ.get('PASS', None)}
+    {os.environ.get('USER1', None): os.environ.get('PASS1', None),
+     os.environ.get('USER2', None): os.environ.get('PASS2', None)}
 )
-print("auth:", auth)
+print("auth:", auth.login_request().response)
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
