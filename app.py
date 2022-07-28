@@ -64,7 +64,6 @@ auth = dash_auth.BasicAuth(
     {os.environ.get('USER1', None): os.environ.get('PASS1', None),
      os.environ.get('USER2', None): os.environ.get('PASS2', None)}
 )
-print("auth:", auth, request.authorization['username'])
 
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
@@ -157,6 +156,7 @@ def complete_auth(pathname, old_scat, storage):
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
+    print("auth:", auth, request.authorization['username'])
     print("storage:", storage, "ok" if storage else "nok")
     pathname = storage if storage else pathname
     try:
