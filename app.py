@@ -201,7 +201,7 @@ def complete_auth(pathname, old_scat, storage):
         print("ERROR:", mse, traceback.format_exc())
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f"authentication failed", new_div, pathname
+        return f"authentication failed", new_div, ""
 
 
 @app.callback(
@@ -213,11 +213,13 @@ def complete_auth(pathname, old_scat, storage):
     Input('compression-radio', 'value'),
     Input('my-graph-pp', 'restyleData'),
     State('my-graph-sp', 'figure'),
-    State('my-graph-pp', 'figure')
+    State('my-graph-pp', 'figure'),
+    State('credentials-storage', 'data')
 )
-def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par):
+def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par, storage):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
+    print("update_sp storage:", storage)
     if trigger is None:
         return old_scat, old_par, str(len(curr_dfs))
     elif trigger == "my-graph-pp":
