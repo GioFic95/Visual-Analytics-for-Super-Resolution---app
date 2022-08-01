@@ -67,7 +67,7 @@ server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
 # cache =
-with open("logs.txt", 'a') as cache:
+with open("logs.txt", 'a+') as cache:
     print("cache:", cache.read())
     cache.write(str(time.time())+"\n")
 
