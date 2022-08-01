@@ -12,15 +12,13 @@ from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
 import dash_auth
 from whitenoise import WhiteNoise
+import gunicorn
 import google.oauth2.credentials
 from google_auth_oauthlib import flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from flask import request
-try:
-    import gunicorn
-except ModuleNotFoundError:
-    print("gunicord or Flask-BasicAuth not found")
+from flask_caching import Cache
 
 from plots import parallel_plot, scatter_plot
 
@@ -67,6 +65,12 @@ auth = dash_auth.BasicAuth(
 
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
+
+cache = Cache(app.server, config={
+    'CACHE_TYPE': 'redis',
+    'CACHE_DIR': 'cache-directory',
+    'CACHE_THRESHOLD': 10
+})
 
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
@@ -138,27 +142,28 @@ div_auth = html.Div([
     html.Label("non authorized", id='credentials-label')
 ])
 
-cred_store = dcc.Store(id='credentials-storage')
-
 app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter, cred_store])
 
 
 @app.callback(
     Output('credentials-label', 'children'),
     Output('my-div-sp', 'children'),
-    Output('credentials-storage', 'data'),
     Input('url', 'href'),
-    State('my-graph-sp', 'figure'),
-    State('credentials-storage', 'data')
+    State('my-graph-sp', 'figure')
 )
-def complete_auth(pathname, old_scat, storage):
+def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
-    print("auth:", auth, request.authorization['username'])
-    print("storage:", storage, "ok" if storage else "nok")
-    pathname = storage if storage else pathname
+    username = request.authorization['username']
+    stored_pathname = cache.get(username)
+    print("stored_path:", username, stored_pathname, type(stored_pathname))
+    if stored_pathname:
+        pathname = stored_pathname
+    else:
+        cache.set(username, pathname)
+
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
@@ -198,13 +203,13 @@ def complete_auth(pathname, old_scat, storage):
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return f"complete auth: {pathname}, {credentials}", new_div, pathname
+        return f"complete auth: {pathname}, {credentials}", new_div
 
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f"authentication failed", new_div, ""
+        return f"authentication failed", new_div
 
 
 @app.callback(
@@ -217,12 +222,10 @@ def complete_auth(pathname, old_scat, storage):
     Input('my-graph-pp', 'restyleData'),
     State('my-graph-sp', 'figure'),
     State('my-graph-pp', 'figure'),
-    State('credentials-storage', 'data')
 )
-def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par, storage):
+def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
-    print("update_sp storage:", storage)
     if trigger is None:
         return old_scat, old_par, str(len(curr_dfs))
     elif trigger == "my-graph-pp":
