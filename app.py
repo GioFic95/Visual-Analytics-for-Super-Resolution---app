@@ -66,7 +66,7 @@ auth = dash_auth.BasicAuth(
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
-with open("logs.txt", 'a+') as cache:
+with open("static/logs.txt", 'a+') as cache:
     print("cache:", cache.read())
     cache.write(str(time.time())+"\n")
 
@@ -162,7 +162,7 @@ def complete_auth(pathname, old_scat):
     # else:
     #     cache.set(username, pathname)
 
-    with open("logs.txt", 'a+') as cache:
+    with open("static/logs.txt", 'a+') as cache:
         print("cache:", cache.read())
         cache.write(username + " - " + str(time.time()) + "\n")
 
