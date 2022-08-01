@@ -142,7 +142,7 @@ div_auth = html.Div([
     html.Label("non authorized", id='credentials-label')
 ])
 
-app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter, cred_store])
+app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
 
 
 @app.callback(
