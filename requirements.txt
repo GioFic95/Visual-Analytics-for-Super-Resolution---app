@@ -13,3 +13,4 @@ google-auth-httplib2
 flask
 requests
 Flask-Caching
+redis
