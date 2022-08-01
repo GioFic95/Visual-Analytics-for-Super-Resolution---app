@@ -1,6 +1,7 @@
 import itertools
 import json
 import os
+import time
 import traceback
 from pathlib import Path
 from typing import List, Dict
@@ -18,7 +19,6 @@ from google_auth_oauthlib import flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from flask import request
-from flask_caching import Cache
 
 from plots import parallel_plot, scatter_plot
 
@@ -66,11 +66,10 @@ auth = dash_auth.BasicAuth(
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
-cache = Cache(app.server, config={
-    'CACHE_TYPE': 'redis',
-    'CACHE_DIR': 'cache-directory',
-    'CACHE_THRESHOLD': 10
-})
+# cache =
+with open("imgs/log.txt", 'a') as cache:
+    print("cache:", cache.read())
+    cache.write(str(time.time())+"\n")
 
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
@@ -156,13 +155,13 @@ def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
-    username = request.authorization['username']
-    stored_pathname = cache.get(username)
-    print("stored_path:", username, stored_pathname, type(stored_pathname))
-    if stored_pathname:
-        pathname = stored_pathname
-    else:
-        cache.set(username, pathname)
+    # username = request.authorization['username']
+    # stored_pathname = cache.get(username)
+    # print("stored_path:", username, stored_pathname, type(stored_pathname))
+    # if stored_pathname:
+    #     pathname = stored_pathname
+    # else:
+    #     cache.set(username, pathname)
 
     try:
         flow.fetch_token(authorization_response=pathname)
