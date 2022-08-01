@@ -66,7 +66,6 @@ auth = dash_auth.BasicAuth(
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
-# cache =
 with open("logs.txt", 'a+') as cache:
     print("cache:", cache.read())
     cache.write(str(time.time())+"\n")
@@ -155,13 +154,17 @@ def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
-    # username = request.authorization['username']
+    username = request.authorization['username']
     # stored_pathname = cache.get(username)
     # print("stored_path:", username, stored_pathname, type(stored_pathname))
     # if stored_pathname:
     #     pathname = stored_pathname
     # else:
     #     cache.set(username, pathname)
+
+    with open("logs.txt", 'a+') as cache:
+        print("cache:", cache.read())
+        cache.write(username + " - " + str(time.time()) + "\n")
 
     try:
         flow.fetch_token(authorization_response=pathname)
