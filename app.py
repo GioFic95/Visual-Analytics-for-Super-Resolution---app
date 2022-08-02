@@ -67,12 +67,20 @@ auth = dash_auth.BasicAuth(
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
-logs = Path("static/logs.txt")
-print("logs:", logs.absolute(), logs.is_file())
-with open(logs, 'r+') as cache:
-    print("cache:", cache.read())
-    cache.seek(0, 2)
-    cache.write(str(datetime.now())+"\n")
+logs_path = Path("static/logs.txt")
+print("logs:", logs_path.absolute(), logs_path.is_file())
+with open(logs_path, 'r+') as logs_file:
+    print("logs_file 1:", logs_file.read())
+    logs_file.write(str(datetime.now()) + "\n")
+
+cache_path = Path("static/cache.json")
+with open(cache_path, 'r+') as cache_file:
+    cache_json = json.load(cache_file)
+    cache = cache_json
+    cache[str(datetime.now())] = "init"
+    print("cache 1:", cache_json, cache)
+    cache_file.seek(0)
+    json.dump(cache, cache_file)
 
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
@@ -166,10 +174,17 @@ def complete_auth(pathname, old_scat):
     # else:
     #     cache.set(username, pathname)
 
-    with open(logs, 'r+') as cache:
-        print("cache:", cache.read())
-        cache.seek(0, 2)
-        cache.write(username + " - " + str(datetime.now()) + "\n")
+    with open(logs_path, 'r+') as logs_file:
+        print("logs_file 2:", logs_file.read())
+        logs_file.write(username + " - " + str(datetime.now()) + "\n")
+
+    with open(cache_path, 'r+') as cache_file:
+        cache_json = json.load(cache_file)
+        cache = cache_json
+        cache[username] = str(pathname)
+        print("cache 2:", cache_json, cache)
+        cache_file.seek(0)
+        json.dump(cache, cache_file)
 
     try:
         flow.fetch_token(authorization_response=pathname)
