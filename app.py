@@ -1,7 +1,8 @@
 import itertools
 import json
 import os
-import time
+# import time
+from datetime import datetime
 import traceback
 from pathlib import Path
 from typing import List, Dict
@@ -71,7 +72,7 @@ print("logs:", logs.absolute(), logs.is_file())
 with open(logs, 'r+') as cache:
     print("cache:", cache.read())
     cache.seek(0, 2)
-    cache.write(str(time.time())+"\n")
+    cache.write(str(datetime.now())+"\n")
 
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
@@ -168,7 +169,7 @@ def complete_auth(pathname, old_scat):
     with open(logs, 'r+') as cache:
         print("cache:", cache.read())
         cache.seek(0, 2)
-        cache.write(username + " - " + str(time.time()) + "\n")
+        cache.write(username + " - " + str(datetime.now()) + "\n")
 
     try:
         flow.fetch_token(authorization_response=pathname)
