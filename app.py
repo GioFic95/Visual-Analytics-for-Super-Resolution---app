@@ -69,9 +69,11 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 # with open("logs.txt", 'w') as cache:
 #     cache.write("STARTING...\n")
 
-with open("logs.txt", 'a+') as cache:
+logs = Path("logs.txt")
+print("logs:", logs.absolute(), logs.is_file())
+with open(logs, 'r') as cache:
     print("cache:", cache.read())
-    cache.write(str(time.time())+"\n")
+    # cache.write(str(time.time())+"\n")
 
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
