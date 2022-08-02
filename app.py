@@ -66,10 +66,10 @@ auth = dash_auth.BasicAuth(
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
-with open("static/logs.txt", 'w') as cache:
-    cache.write("STARTING...\n")
+# with open("logs.txt", 'w') as cache:
+#     cache.write("STARTING...\n")
 
-with open("static/logs.txt", 'a+') as cache:
+with open("logs.txt", 'a+') as cache:
     print("cache:", cache.read())
     cache.write(str(time.time())+"\n")
 
