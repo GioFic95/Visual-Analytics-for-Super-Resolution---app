@@ -69,7 +69,7 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 # with open("logs.txt", 'w') as cache:
 #     cache.write("STARTING...\n")
 
-logs = Path("logs.txt")
+logs = Path("static/logs.txt")
 print("logs:", logs.absolute(), logs.is_file())
 with open(logs, 'r') as cache:
     print("cache:", cache.read())
