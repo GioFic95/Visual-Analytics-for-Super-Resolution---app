@@ -181,10 +181,14 @@ def complete_auth(pathname, old_scat):
     with open(cache_path, 'r+') as cache_file:
         cache_json = json.load(cache_file)
         cache = cache_json
-        cache[username] = str(pathname)
-        print("cache 2:", cache_json, cache)
-        cache_file.seek(0)
-        json.dump(cache, cache_file)
+        user_cache = cache.get(username, None)
+        if user_cache is not None:
+            pathname = user_cache
+        else:
+            cache[username] = str(pathname)
+            print("cache 2:", cache_json, cache)
+            cache_file.seek(0)
+            json.dump(cache, cache_file)
 
     try:
         flow.fetch_token(authorization_response=pathname)
@@ -229,6 +233,12 @@ def complete_auth(pathname, old_scat):
 
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
+
+        cache[username] = None
+        print("cache 3:", cache_json, cache)
+        cache_file.seek(0)
+        json.dump(cache, cache_file)
+
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
         return f"authentication failed", new_div
