@@ -6,6 +6,7 @@ from datetime import datetime
 import traceback
 from pathlib import Path
 from typing import List, Dict
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
@@ -186,11 +187,13 @@ def complete_auth(pathname, old_scat):
         user_cache = cache.get(username, None)
         if user_cache is not None:
             pathname = user_cache
-        else:
+        elif urlparse(pathname).query:
             cache[username] = str(pathname)
-            print("cache 2b:", cache_json, cache)
+            print("cache 2b (query):", cache_json, cache)
             cache_file.seek(0)
             json.dump(cache, cache_file)
+        else:
+            print("cache 2b (no query):", cache_json, cache)
 
     try:
         flow.fetch_token(authorization_response=pathname)
