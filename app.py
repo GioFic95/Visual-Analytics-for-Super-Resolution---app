@@ -180,6 +180,7 @@ def complete_auth(pathname, old_scat):
 
     with open(cache_path, 'r+') as cache_file:
         print("cache 2a", cache_file.read())
+        cache_file.seek(0)
         cache_json = json.load(cache_file)
         cache = cache_json
         user_cache = cache.get(username, None)
