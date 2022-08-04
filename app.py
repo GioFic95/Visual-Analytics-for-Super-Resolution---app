@@ -150,7 +150,7 @@ div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30}
 div_auth = html.Div([
     html.A("Click to authorize Google Drive", href=authorization_url),  # , target="_blank"
     dcc.Location(id='url', refresh=False),
-    html.Label("non authorized", id='credentials-label')
+    html.Label(" Non authorized", id='credentials-label')
 ])
 
 app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
@@ -168,12 +168,6 @@ def complete_auth(pathname, old_scat):
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
     username = request.authorization['username']
-    # stored_pathname = cache.get(username)
-    # print("stored_path:", username, stored_pathname, type(stored_pathname))
-    # if stored_pathname:
-    #     pathname = stored_pathname
-    # else:
-    #     cache.set(username, pathname)
 
     with open(logs_path, 'r+') as logs_file:
         print("logs_file 2:", logs_file.read())
@@ -187,13 +181,17 @@ def complete_auth(pathname, old_scat):
         user_cache = cache.get(username, None)
         if user_cache is not None:
             pathname = user_cache
+            print("cache 2b (user_cache):", username, "==>", pathname)
         elif urlparse(pathname).query:
             cache[username] = str(pathname)
-            print("cache 2b (query):", cache_json, cache)
+            print("cache 2c (query):", cache_json, cache)
             cache_file.seek(0)
             json.dump(cache, cache_file)
         else:
-            print("cache 2b (no query):", cache_json, cache)
+            print("cache 2d (no query):", cache_json, cache)
+            new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                                figure=old_scat, id=f"my-graph-sp")
+            return f" Non authorized", new_div
 
     try:
         flow.fetch_token(authorization_response=pathname)
@@ -234,7 +232,7 @@ def complete_auth(pathname, old_scat):
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return f"complete auth: {pathname}, {credentials}", new_div
+        return f" Complete auth: {pathname}, {credentials}", new_div
 
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
@@ -247,7 +245,7 @@ def complete_auth(pathname, old_scat):
 
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f"authentication failed", new_div
+        return f" Authentication failed", new_div
 
 
 @app.callback(
