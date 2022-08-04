@@ -68,6 +68,7 @@ auth = dash_auth.BasicAuth(
 
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
+server.secret_key = os.environ.get("secret_key", None)
 
 logs_path = Path("static/logs.txt")
 print("logs:", logs_path.absolute(), logs_path.is_file())
@@ -195,9 +196,9 @@ def complete_auth(pathname, old_scat):
             return f" Non authorized", new_div
 
     try:
+        print("flask 1", flask)
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
-        print("flask 1", flask)
         flask.session['credentials'] = {
             'token': credentials.token,
             'refresh_token': credentials.refresh_token,
