@@ -21,6 +21,7 @@ from google_auth_oauthlib import flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from flask import request
+import flask
 
 from plots import parallel_plot, scatter_plot
 
@@ -196,6 +197,15 @@ def complete_auth(pathname, old_scat):
     try:
         flow.fetch_token(authorization_response=pathname)
         credentials = flow.credentials
+        print("flask 1", flask)
+        flask.session['credentials'] = {
+            'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes}
+        print("flask 2", flask.session)
         print("complete auth:", pathname, credentials)
         total = 0
 
