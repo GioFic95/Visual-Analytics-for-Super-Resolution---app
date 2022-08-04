@@ -236,8 +236,9 @@ def complete_auth(pathname, old_scat):
 
         cache[username] = None
         print("cache 3:", cache_json, cache)
-        cache_file.seek(0)
-        json.dump(cache, cache_file)
+        with open(cache_path, 'r+') as cache_file:
+            cache_file.seek(0)
+            json.dump(cache, cache_file)
 
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
