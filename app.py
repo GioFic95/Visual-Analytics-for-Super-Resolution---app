@@ -179,6 +179,7 @@ def complete_auth(pathname, old_scat):
         logs_file.write(username + " - " + str(datetime.now()) + "\n")
 
     with open(cache_path, 'r+') as cache_file:
+        print("cache 2a", cache_file.read())
         cache_json = json.load(cache_file)
         cache = cache_json
         user_cache = cache.get(username, None)
@@ -186,7 +187,7 @@ def complete_auth(pathname, old_scat):
             pathname = user_cache
         else:
             cache[username] = str(pathname)
-            print("cache 2:", cache_json, cache)
+            print("cache 2b:", cache_json, cache)
             cache_file.seek(0)
             json.dump(cache, cache_file)
 
