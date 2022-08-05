@@ -7,6 +7,7 @@ import traceback
 from pathlib import Path
 from typing import List, Dict
 from urllib.parse import urlparse
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -208,43 +209,6 @@ def complete_auth(pathname, old_scat):
             'scopes': credentials.scopes}
         print("flask 2", flask.session)
         print("complete auth:", pathname, credentials)
-        total = 0
-
-        try:
-            service = build('drive', 'v3', credentials=credentials)
-            page_token = None
-            while True:
-                response = service.files().list(q=q,
-                                                # spaces='drive',
-                                                pageSize=1000,
-                                                fields='nextPageToken, '
-                                                       'files(id, name, webContentLink, parents)',
-                                                pageToken=page_token).execute()
-                print("response:", response)
-                curr_files = response.get('files', [])
-                total += len(curr_files)
-                for file in curr_files:
-                    if gdrive_gt in file['parents']:
-                        files_gt[file['name']] = file['webContentLink']
-                    elif gdrive_h265 in file['parents']:
-                        files_h265[file['name']] = file['webContentLink']
-                    elif gdrive_imgc in file['parents']:
-                        files_imgc[file['name']] = file['webContentLink']
-                    else:
-                        raise ValueError("unrecognized parent")
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    break
-        except HttpError as error:
-            print(f'An error occurred: {error}')
-        print("files:", files_gt, files_h265, files_imgc, len(files_h265) + len(files_imgc) + len(files_gt), total)
-
-        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
-        new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
-        new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
-                            figure=new_scat, id=f"my-graph-sp")
-        return f" Complete auth: {pathname}, {credentials}", new_div
-
     except Exception as mse:
         print("ERROR:", mse, traceback.format_exc())
 
@@ -256,6 +220,50 @@ def complete_auth(pathname, old_scat):
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
         return f" Authentication failed", new_div
+
+    total = 0
+    try:
+        service = build('drive', 'v3', credentials=credentials)
+        page_token = None
+        while True:
+            response = service.files().list(q=q,
+                                            pageSize=1000,
+                                            fields='nextPageToken, '
+                                                   'files(id, name, webContentLink, parents)',
+                                            pageToken=page_token).execute()
+            print("response:", response)
+            curr_files = response.get('files', [])
+            total += len(curr_files)
+            for file in curr_files:
+                if gdrive_gt in file['parents']:
+                    files_gt[file['name']] = file['webContentLink']
+                elif gdrive_h265 in file['parents']:
+                    files_h265[file['name']] = file['webContentLink']
+                elif gdrive_imgc in file['parents']:
+                    files_imgc[file['name']] = file['webContentLink']
+                else:
+                    raise ValueError("unrecognized parent")
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+    except HttpError as error:
+        print(f'An error occurred: {error}')
+
+    print("files:", files_gt, files_h265, files_imgc, len(files_h265) + len(files_imgc) + len(files_gt), total)
+    if len(files_h265) + len(files_imgc) + len(files_gt) == 0:
+        new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                            figure=old_scat, id=f"my-graph-sp")
+        return f" Complete auth but no images: {pathname}, {credentials}", new_div
+    else:
+        if len(files_h265) + len(files_imgc) + len(files_gt) != total:
+            warnings.warn("len of dictionaries != number of files")
+        elif len(files_h265) != len(files_imgc) or len(files_imgc) != len(files_gt):
+            warnings.warn("len(files_h265) != len(files_imgc) != len(files_gt)")
+        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
+        new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+        new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                            figure=new_scat, id=f"my-graph-sp")
+        return f" Complete auth: {pathname}, {credentials}", new_div
 
 
 @app.callback(
