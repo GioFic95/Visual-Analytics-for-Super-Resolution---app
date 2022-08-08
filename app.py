@@ -95,7 +95,6 @@ flow.redirect_uri = 'https://sleepy-ravine-64876.herokuapp.com'
 authorization_url, state = flow.authorization_url(
     access_type='offline',
     include_granted_scopes='true')
-flask.session['state'] = state
 print("authorization:", authorization_url, state)
 
 curr_dfp = get_df(csv_avg, types)
@@ -167,6 +166,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
+    flask.session['state'] = state
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
     username = request.authorization['username']
