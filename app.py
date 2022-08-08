@@ -17,7 +17,7 @@ import dash_bootstrap_components as dbc
 import dash_auth
 from whitenoise import WhiteNoise
 import gunicorn
-import google.oauth2.credentials
+import google.oauth2.credentials as goc
 from google_auth_oauthlib import flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -88,7 +88,6 @@ with open(cache_path, 'r+') as cache_file:
 # https://cloud.google.com/docs/authentication/end-user
 # https://developers.google.com/identity/protocols/oauth2/web-server#python
 client_secrets = json.loads(os.environ.get("client_secrets", None))
-
 flow = flow.Flow.from_client_config(
     client_secrets,
     scopes=['https://www.googleapis.com/auth/drive.readonly'])
@@ -96,6 +95,7 @@ flow.redirect_uri = 'https://sleepy-ravine-64876.herokuapp.com'
 authorization_url, state = flow.authorization_url(
     access_type='offline',
     include_granted_scopes='true')
+flask.session['state'] = state
 print("authorization:", authorization_url, state)
 
 curr_dfp = get_df(csv_avg, types)
@@ -181,15 +181,17 @@ def complete_auth(pathname, old_scat):
         cache = json.loads(cache_txt)
         user_cache = cache.get(username, None)
 
-        # if already authenticated, load credentials from cache
+        # if already authenticated, load credentials from cache and create
         if user_cache is not None:
             flask.session['credentials'] = user_cache
             print("cache 2b (user_cache):", username, "==>", flask.session['credentials'])
+            credentials = goc.Credentials(token=user_cache['token'], refresh_token=user_cache['refresh_token'],
+                                          token_uri=user_cache['token_uri'], client_id=user_cache['client_id'],
+                                          client_secret=user_cache['client_secret'], scopes=user_cache['scopes'])
 
         # if authenticating, request credentials and store the response in the cache
         elif urlparse(pathname).query:
             try:
-                print("flask 1", flask)
                 flow.fetch_token(authorization_response=pathname)
                 credentials = flow.credentials
                 flask_creds = {
@@ -201,7 +203,7 @@ def complete_auth(pathname, old_scat):
                     'scopes': credentials.scopes
                 }
                 flask.session['credentials'] = flask_creds
-                print("flask 2", flask.session)
+                print("flask session", flask.session)
                 print("complete auth:", pathname, credentials)
 
                 cache[username] = flask_creds
