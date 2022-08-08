@@ -79,10 +79,9 @@ with open(logs_path, 'r+') as logs_file:
 
 cache_path = Path("static/cache.json")
 with open(cache_path, 'r+') as cache_file:
-    cache_json = json.load(cache_file)
-    cache = cache_json
+    cache = json.load(cache_file)
     cache[str(datetime.now())] = "init"
-    print("cache 1:", cache_json, cache)
+    print("cache 1:", cache)
     cache_file.seek(0)
     json.dump(cache, cache_file)
 
@@ -179,47 +178,50 @@ def complete_auth(pathname, old_scat):
     with open(cache_path, 'r+') as cache_file:
         cache_txt = cache_file.read()
         print("cache 2a", cache_txt)
-        cache_json = json.loads(cache_txt)
-        cache = cache_json
+        cache = json.loads(cache_txt)
         user_cache = cache.get(username, None)
+
+        # if already authenticated, load credentials from cache
         if user_cache is not None:
-            pathname = user_cache
-            print("cache 2b (user_cache):", username, "==>", pathname)
+            flask.session['credentials'] = user_cache
+            print("cache 2b (user_cache):", username, "==>", flask.session['credentials'])
+
+        # if authenticating, request credentials and store the response in the cache
         elif urlparse(pathname).query:
-            cache[username] = str(pathname)
-            print("cache 2c (query):", cache_json, cache)
-            cache_file.seek(0)
-            json.dump(cache, cache_file)
+            try:
+                print("flask 1", flask)
+                flow.fetch_token(authorization_response=pathname)
+                credentials = flow.credentials
+                flask_creds = {
+                    'token': credentials.token,
+                    'refresh_token': credentials.refresh_token,
+                    'token_uri': credentials.token_uri,
+                    'client_id': credentials.client_id,
+                    'client_secret': credentials.client_secret,
+                    'scopes': credentials.scopes
+                }
+                flask.session['credentials'] = flask_creds
+                print("flask 2", flask.session)
+                print("complete auth:", pathname, credentials)
+
+                cache[username] = flask_creds
+                print("cache 2c (query):", cache)
+                cache_file.seek(0)
+                json.dump(cache, cache_file)
+
+            # in case of errors while getting the credentials, just report the failure
+            except Exception as mse:
+                print("ERROR:", mse, traceback.format_exc())
+                new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                                    figure=old_scat, id=f"my-graph-sp")
+                return f" Authentication failed", new_div
+
+        # if first access, do nothing
         else:
-            print("cache 2d (no query):", cache_json, cache)
+            print("cache 4 (no query):", cache)
             new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                 figure=old_scat, id=f"my-graph-sp")
             return f" Non authorized", new_div
-
-    try:
-        print("flask 1", flask)
-        flow.fetch_token(authorization_response=pathname)
-        credentials = flow.credentials
-        flask.session['credentials'] = {
-            'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes}
-        print("flask 2", flask.session)
-        print("complete auth:", pathname, credentials)
-    except Exception as mse:
-        print("ERROR:", mse, traceback.format_exc())
-
-        cache[username] = None
-        print("cache 3:", cache_json, cache)
-        with open(cache_path, 'w') as cache_file:
-            json.dump(cache, cache_file)
-
-        new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
-                            figure=old_scat, id=f"my-graph-sp")
-        return f" Authentication failed", new_div
 
     total = 0
     try:
