@@ -27,18 +27,16 @@ import flask
 from plots import parallel_plot, scatter_plot
 
 
-csv_avg = Path("./assets/test_results.csv")
-csv_all = Path("./assets/test_results_all.csv")
+csv_avg = Path("./assets/test_results_isb.csv")
+csv_all = Path("./assets/test_results_all_isb.csv")
 types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
-gdrive_gt = "1MiFD5DHri0VrfZUheQLux0GKNkxPpt1t"
-gdrive_h265 = "1LXScXneRTD2eIsvw_kDm987gpghLydQR"
-gdrive_imgc = "1KcFb-ZDZEQmG1k1sabP7d-qFU5gPczAc"
+gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
+gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"
 files_gt = dict()
-files_h265 = dict()
-files_imgc = dict()
+files_res = dict()
 highlights = []
 
 
@@ -168,7 +166,7 @@ def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     flask.session['state'] = state
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
-        f"('{gdrive_gt}' in parents or '{gdrive_h265}' in parents or '{gdrive_imgc}' in parents)"
+        f"('{gdrive_gt}' in parents or '{gdrive_res}' in parents)"
     username = request.authorization['username']
 
     with open(logs_path, 'r+') as logs_file:
@@ -241,10 +239,8 @@ def complete_auth(pathname, old_scat):
             for file in curr_files:
                 if gdrive_gt in file['parents']:
                     files_gt[file['name']] = file['webContentLink']
-                elif gdrive_h265 in file['parents']:
-                    files_h265[file['name']] = file['webContentLink']
-                elif gdrive_imgc in file['parents']:
-                    files_imgc[file['name']] = file['webContentLink']
+                elif gdrive_res in file['parents']:
+                    files_res[file['name']] = file['webContentLink']
                 else:
                     raise ValueError("unrecognized parent")
             page_token = response.get('nextPageToken', None)
@@ -253,17 +249,15 @@ def complete_auth(pathname, old_scat):
     except HttpError as error:
         print(f'An error occurred: {error}')
 
-    print("files:", files_gt, files_h265, files_imgc, len(files_h265) + len(files_imgc) + len(files_gt), total)
-    if len(files_h265) + len(files_imgc) + len(files_gt) == 0:
+    print("files:", files_gt, files_res, len(files_res) + len(files_gt), total)
+    if len(files_res) + len(files_gt) == 0:
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
         return f" Complete auth but no images: {pathname}, {credentials}", new_div
     else:
-        if len(files_h265) + len(files_imgc) + len(files_gt) != total:
+        if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
-        elif len(files_h265) != len(files_imgc) or len(files_imgc) != len(files_gt):
-            warnings.warn("len(files_h265) != len(files_imgc) != len(files_gt)")
-        highlights[:] = list(files_h265.keys()) + list(files_imgc.keys())
+        highlights[:] = list(files_res.keys())
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
@@ -377,11 +371,10 @@ def display_click_data(click_data, graph):
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         gt_name = name.split("_")[0] + ".png"
-        print("OOOOOOOH", gt_name, name, files_gt, files_h265, files_imgc)
+        print("OOOOOOOH", gt_name, name, files_gt, files_res)
         try:
-            res_img = files_h265.get(name, None) or files_imgc[name]
-            print("AAAAAAAAA", gt_name,
-                  files_gt[gt_name], files_h265.get(name, None), files_imgc.get(name, None), res_img)
+            res_img = files_res.get(name, None)
+            print("AAAAAAAAA", gt_name, files_gt[gt_name], files_res.get(name, None), res_img)
             new_div = html.Div([
                 html.Img(src=files_gt[gt_name], height=395),
                 html.Img(src=res_img, height=395),
