@@ -165,8 +165,7 @@ def complete_auth(pathname, old_scat):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     flask.session['state'] = state
-    q = "trashed = false and includeItemsFromAllDrives = true and supportsAllDrives = true " \
-        "and (mimeType='image/png' or mimeType='image/jpeg') and " \
+    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_res}' in parents)"
     username = request.authorization['username']
 
@@ -229,7 +228,7 @@ def complete_auth(pathname, old_scat):
         service = build('drive', 'v3', credentials=credentials)
         page_token = None
         while True:
-            response = service.files().list(q=q,
+            response = service.files().list(q=q, includeItemsFromAllDrives=True, supportsAllDrives=True,
                                             pageSize=1000,
                                             fields='nextPageToken, '
                                                    'files(id, name, webContentLink, parents)',
