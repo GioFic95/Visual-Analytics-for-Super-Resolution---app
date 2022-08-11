@@ -35,9 +35,6 @@ metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 ds_suffix = "saipem"
 gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
 gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"
-files_gt = dict()
-files_res = dict()
-highlights = []
 
 
 def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
@@ -101,7 +98,7 @@ queries = {"dataset": "", "compression": "", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp)
-scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", [])
 metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)]
 last_m12 = [None, None]
 
@@ -147,17 +144,26 @@ div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div], c
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
 div_auth = html.Div([
-    html.A("Click to authorize Google Drive", href=authorization_url),  # , target="_blank"
+    html.A("Click to authorize Google Drive", href=authorization_url),
     dcc.Location(id='url', refresh=False),
     html.Label(" Non authorized", id='credentials-label')
 ])
 
-app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter])
+div_storage = html.Div([
+    dcc.Store(id='store_gt', storage_type='session'),
+    dcc.Store(id='store_res', storage_type='session'),
+    dcc.Store(id='store_highlights', storage_type='session'),
+])
+
+app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter, div_storage])
 
 
 @app.callback(
     Output('credentials-label', 'children'),
     Output('my-div-sp', 'children'),
+    Output('store_gt', 'data'),
+    Output('store_res', 'data'),
+    Output('store_highlights', 'data'),
     Input('url', 'href'),
     State('my-graph-sp', 'figure')
 )
@@ -168,6 +174,9 @@ def complete_auth(pathname, old_scat):
     q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
         f"('{gdrive_gt}' in parents or '{gdrive_res}' in parents)"
     username = request.authorization['username']
+    files_gt = dict()
+    files_res = dict()
+    highlights = []
 
     with open(logs_path, 'r+') as logs_file:
         print("logs_file 2:", logs_file.read())
@@ -212,16 +221,16 @@ def complete_auth(pathname, old_scat):
             # in case of errors while getting the credentials, just report the failure
             except Exception as mse:
                 print("ERROR:", mse, traceback.format_exc())
-                new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+                old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                     figure=old_scat, id=f"my-graph-sp")
-                return f" Authentication failed", new_div
+                return f" Authentication failed", old_div, files_gt, files_res, highlights
 
         # if first access, do nothing
         else:
             print("cache 4 (no query):", cache)
-            new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+            old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                 figure=old_scat, id=f"my-graph-sp")
-            return f" Non authorized", new_div
+            return f" Non authorized", old_div, files_gt, files_res, highlights
 
     total = 0
     try:
@@ -253,7 +262,7 @@ def complete_auth(pathname, old_scat):
     if len(files_res) + len(files_gt) == 0:
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f" Complete auth but no images: {pathname}, {credentials}", new_div
+        return f" Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights
     else:
         if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
@@ -261,7 +270,7 @@ def complete_auth(pathname, old_scat):
         new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return f" Complete auth: {pathname}, {credentials}", new_div
+        return f" Complete auth: {pathname}, {credentials}", new_div, files_gt, files_res, highlights
 
 
 @app.callback(
@@ -274,19 +283,20 @@ def complete_auth(pathname, old_scat):
     Input('my-graph-pp', 'restyleData'),
     State('my-graph-sp', 'figure'),
     State('my-graph-pp', 'figure'),
+    State('store_highlights', 'data'),
 )
-def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par):
+def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par, store_highlights):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
     if trigger is None:
         return old_scat, old_par, str(len(curr_dfs))
     elif trigger == "my-graph-pp":
-        return update_sp_parallel(selection, old_scat, old_par)
+        return update_sp_parallel(selection, old_scat, old_par, store_highlights)
     else:
-        return update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par)
+        return update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par, store_highlights)
 
 
-def update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par):
+def update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par, highlights):
     print('update_sp', drop_mc, radio_ds, radio_cp)
 
     count = len(curr_dfs)
@@ -317,7 +327,7 @@ def update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par):
     return new_scat, new_par, str(count)
 
 
-def update_sp_parallel(selection, old_scat, old_par):
+def update_sp_parallel(selection, old_scat, old_par, highlights):
     print("selection:", selection)
 
     if selection is None:
@@ -364,9 +374,15 @@ def update_sp_parallel(selection, old_scat, old_par):
     Output('my-img', 'children'),
     Input('my-graph-sp', 'clickData'),
     Input('my-graph-sp', 'figure'),
+    State('store_gt', 'data'),
+    State('store_res', 'data'),
 )
-def display_click_data(click_data, graph):
+def display_click_data(click_data, graph, store_gt, store_res):
     if click_data is not None:
+        print("type(store_gt):", type(store_gt))
+        files_gt = store_gt
+        files_res = store_res
+
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
