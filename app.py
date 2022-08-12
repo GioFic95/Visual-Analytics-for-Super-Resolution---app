@@ -1,16 +1,12 @@
-import itertools
 import json
 import os
-# import time
 from datetime import datetime
 import traceback
 from pathlib import Path
-from typing import List, Dict
 from urllib.parse import urlparse
 import warnings
 
 import numpy as np
-import pandas as pd
 import dash
 from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
@@ -25,22 +21,14 @@ from flask import request
 import flask
 
 from plots import parallel_plot, scatter_plot
+from metrics import get_df, all_to_avg
 
 
-csv_avg = Path("./assets/test_results_isb.csv")
-csv_all = Path("./assets/test_results_all_isb.csv")
-types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
-         "type": str, "mask": bool, "category": str}
-metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
+csv_all = Path("./assets/saipem_all.csv")
+types = {"filename": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": str, "category": str}
 ds_suffix = "saipem"
 gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
 gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"
-
-
-def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
-    df = pd.read_csv(csv, dtype=types_dict)
-    df.query("mask == False", inplace=True)
-    return df
 
 
 def make_query(avg: bool = False) -> str:
@@ -92,14 +80,13 @@ authorization_url, state = flow.authorization_url(
     include_granted_scopes='true')
 print("authorization:", authorization_url, state)
 
-curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
+curr_dfp = all_to_avg(curr_dfs)
 queries = {"dataset": "", "compression": "", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp)
-scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", [])
-metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)]
+scat = scatter_plot(curr_dfs, "PSNR", "MS-SSIM", [])
 last_m12 = [None, None]
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
@@ -113,15 +100,6 @@ div_scatter = html.Div([
               html.Div(id=f"my-img")
               ], className='col-4')
 ], className='row')
-
-metrics_label = html.Label("Metrics:", style={'font-weight': 'bold', "text-align": "center", 'margin-bottom': 10})
-metrics_dd = dcc.Dropdown(
-                id="metrics-dropdown",
-                options=metric_combos,
-                value="ssim VS psnr_rgb",
-                style={'width': '200px'}
-)
-metrics_div = html.Div([metrics_label, metrics_dd], className="col")
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
 dataset_radio = dcc.RadioItems({"isb": "F4K+", "saipem": "Saipem", "": "All"}, "", id="dataset-radio",
@@ -139,7 +117,7 @@ count_label = html.Label("Number of items:", style={'font-weight': 'bold', 'marg
 count_field = html.Div(html.Label("Counting...", id="count_lab"), id="count_div")
 count_div = html.Div([count_label, count_field], className="col")
 
-div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div], className="row", style={"margin": 15})
+div_buttons = html.Div([dataset_div, compression_div, count_div], className="row", style={"margin": 15})
 
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
@@ -277,7 +255,6 @@ def complete_auth(pathname, old_scat):
     Output('my-graph-sp', 'figure'),
     Output('my-graph-pp', 'figure'),
     Output('count_lab', 'children'),
-    Input('metrics-dropdown', 'value'),
     Input('dataset-radio', 'value'),
     Input('compression-radio', 'value'),
     Input('my-graph-pp', 'restyleData'),
@@ -285,7 +262,7 @@ def complete_auth(pathname, old_scat):
     State('my-graph-pp', 'figure'),
     State('store_highlights', 'data'),
 )
-def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par, store_highlights):
+def update_sp(radio_ds, radio_cp, selection, old_scat, old_par, store_highlights):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
     if trigger is None:
@@ -293,15 +270,13 @@ def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par, store_h
     elif trigger == "my-graph-pp":
         return update_sp_parallel(selection, old_scat, old_par, store_highlights)
     else:
-        return update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par, store_highlights)
+        return update_sp_buttons(radio_ds, radio_cp, old_scat, old_par, store_highlights)
 
 
-def update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par, highlights):
-    print('update_sp', drop_mc, radio_ds, radio_cp)
+def update_sp_buttons(radio_ds, radio_cp, old_scat, old_par, highlights):
+    print('update_sp', radio_ds, radio_cp)
 
     count = len(curr_dfs)
-    m1, m2 = str(drop_mc).split(" VS ")
-    last_m12[0:2] = m1, m2
     queries["dataset"] = f"train == '{radio_ds}'" if radio_ds != "" else ""
     queries["compression"] = f"type == '{radio_cp}'" if radio_cp != "" else ""
 
@@ -309,7 +284,7 @@ def update_sp_buttons(drop_mc, radio_ds, radio_cp, old_scat, old_par, highlights
     if len(query_dfs):
         updated_dfs = curr_dfs.query(query_dfs)
         print(updated_dfs.shape)
-        new_scat = scatter_plot(updated_dfs, m1, m2, highlights)
+        new_scat = scatter_plot(updated_dfs, "PSNR", "MS-SSIM", highlights)
         new_scat.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         count = len(updated_dfs)
     else:
