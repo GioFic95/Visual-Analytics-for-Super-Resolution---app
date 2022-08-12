@@ -1,4 +1,4 @@
-filename,MS-SSIM,PSNR,category,quality,size
+name,MS-SSIM,PSNR,category,quality,size
 00000,0.985632,43.7606,pipeline_1,high,1K
 00000,0.964631,35.3074,pipeline_2,high,1K
 00000,0.978162,38.5516,pipeline_3,high,1K

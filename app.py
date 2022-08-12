@@ -25,7 +25,7 @@ from metrics import get_df, all_to_avg
 
 
 csv_all = Path("./assets/saipem_all.csv")
-types = {"filename": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": str, "category": str}
+types = {"name": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": str, "category": str}
 ds_suffix = "saipem"
 gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
 gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"

@@ -18,8 +18,9 @@ def adapt_benchmark(benchmark_path: Path, out_csv_path: Path):
             in_df["size"] = [size for _ in range(len(in_df))]
             in_df["category"] = [pipeline for _ in range(len(in_df))]
             out_df = pd.concat([out_df, in_df])
-    out_df["filename"] = out_df["filename"].apply(lambda x: f"{x:0>5}")
-    out_df.sort_values(["filename", "size", "quality"], inplace=True)
+    out_df.rename(columns={"filename": "name"}, inplace=True)
+    out_df["name"] = out_df["name"].apply(lambda x: f"{x:0>5}")
+    out_df.sort_values(["name", "size", "quality"], inplace=True)
     out_df.to_csv(out_csv_path, index=False)
 
 
@@ -36,5 +37,5 @@ if __name__ == '__main__':
     adapt_benchmark(bp, ocp)
 
     df = get_df(bp / "all.csv",
-                {"filename": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": str, "category": str})
+                {"name": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": str, "category": str})
     print(all_to_avg(df))
