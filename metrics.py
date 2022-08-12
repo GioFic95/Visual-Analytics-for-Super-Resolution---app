@@ -27,8 +27,9 @@ def adapt_benchmark(benchmark_path: Path, out_csv_path: Path):
 def all_to_avg(all_df: pd.DataFrame) -> pd.DataFrame:
     res = all_df.copy()
     res["category"] = res.apply(lambda x: f"{x.category}_{x['size']}_{x.quality}", axis=1)
-    res = res.groupby(by="category").agg({"MS-SSIM": "mean", "PSNR": "mean", "quality": "first", "size": "first"})
-    res.rename(columns={"category": "name"}, inplace=True)
+    res = res.groupby(by="category").agg({"MS-SSIM": "mean", "PSNR": "mean", "quality": "first", "size": "first"})\
+        .reset_index()\
+        .rename(columns={"category": "name"})
     return res
 
 
