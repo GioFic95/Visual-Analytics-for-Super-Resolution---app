@@ -28,6 +28,7 @@ def all_to_avg(all_df: pd.DataFrame) -> pd.DataFrame:
     res = all_df.copy()
     res["category"] = res.apply(lambda x: f"{x.category}_{x['size']}_{x.quality}", axis=1)
     res = res.groupby(by="category").agg({"MS-SSIM": "mean", "PSNR": "mean", "quality": "first", "size": "first"})
+    res.rename(columns={"category": "name"}, inplace=True)
     return res
 
 
