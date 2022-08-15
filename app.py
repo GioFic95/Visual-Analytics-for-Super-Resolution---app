@@ -82,7 +82,7 @@ print("authorization:", authorization_url, state)
 
 curr_dfs = get_df(csv_all, types)
 curr_dfp = all_to_avg(curr_dfs)
-queries = {"dataset": "", "compression": "", "parallel": ""}
+queries = {"size": "", "quality": "", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp)
@@ -101,23 +101,23 @@ div_scatter = html.Div([
               ], className='col-4')
 ], className='row')
 
-dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
-dataset_radio = dcc.RadioItems({"isb": "F4K+", "saipem": "Saipem", "": "All"}, "", id="dataset-radio",
-                               className="form-check", labelStyle={'display': 'flex'},
-                               inputClassName="form-check-input", labelClassName="form-check-label")
-dataset_div = html.Div([dataset_label, dataset_radio], className="col")
+size_label = html.Label("Size:", style={'font-weight': 'bold', 'margin-bottom': 10})
+size_radio = dcc.RadioItems({"1K": "1K", "SD": "SD"}, "1K", id="size-radio",
+                            className="form-check", labelStyle={'display': 'flex'},
+                            inputClassName="form-check-input", labelClassName="form-check-label")
+size_div = html.Div([size_label, size_radio], className="col")
 
-compression_label = html.Label("Compression type:", style={'font-weight': 'bold', 'margin-bottom': 10})
-compression_radio = dcc.RadioItems({"img": "Image Compression", "vid": "Video Compression", "": "All"}, "",
-                                   id="compression-radio", className="form-check", labelStyle={'display': 'flex'},
-                                   inputClassName="form-check-input", labelClassName="form-check-label")
-compression_div = html.Div([compression_label, compression_radio], className="col")
+quality_label = html.Label("Quality:", style={'font-weight': 'bold', 'margin-bottom': 10})
+quality_radio = dcc.RadioItems({"low": "Low", "medium": "Medium", "high": "High"}, "",
+                               id="quality-radio", className="form-check", labelStyle={'display': 'flex'},
+                               inputClassName="form-check-input", labelClassName="form-check-label")
+quality_div = html.Div([quality_label, quality_radio], className="col")
 
 count_label = html.Label("Number of items:", style={'font-weight': 'bold', 'margin-bottom': 10})
 count_field = html.Div(html.Label("Counting...", id="count_lab"), id="count_div")
 count_div = html.Div([count_label, count_field], className="col")
 
-div_buttons = html.Div([dataset_div, compression_div, count_div], className="row", style={"margin": 15})
+div_buttons = html.Div([size_div, quality_div, count_div], className="row", style={"margin": 15})
 
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
@@ -255,8 +255,8 @@ def complete_auth(pathname, old_scat):
     Output('my-graph-sp', 'figure'),
     Output('my-graph-pp', 'figure'),
     Output('count_lab', 'children'),
-    Input('dataset-radio', 'value'),
-    Input('compression-radio', 'value'),
+    Input('size-radio', 'value'),
+    Input('quality-radio', 'value'),
     Input('my-graph-pp', 'restyleData'),
     State('my-graph-sp', 'figure'),
     State('my-graph-pp', 'figure'),
@@ -273,12 +273,12 @@ def update_sp(radio_ds, radio_cp, selection, old_scat, old_par, store_highlights
         return update_sp_buttons(radio_ds, radio_cp, old_scat, old_par, store_highlights)
 
 
-def update_sp_buttons(radio_ds, radio_cp, old_scat, old_par, highlights):
-    print('update_sp', radio_ds, radio_cp)
+def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights):
+    print('update_sp', radio_size, radio_qual)
 
     count = len(curr_dfs)
-    queries["dataset"] = f"train == '{radio_ds}'" if radio_ds != "" else ""
-    queries["compression"] = f"type == '{radio_cp}'" if radio_cp != "" else ""
+    queries["size"] = f"size == '{radio_size}'" if radio_size != "" else ""
+    queries["quality"] = f"quality == '{radio_qual}'" if radio_qual != "" else ""
 
     query_dfs = make_query()
     if len(query_dfs):
