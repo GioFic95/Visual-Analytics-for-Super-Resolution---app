@@ -82,7 +82,7 @@ print("authorization:", authorization_url, state)
 
 curr_dfs = get_df(csv_all, types)
 curr_dfp = all_to_avg(curr_dfs)
-queries = {"size": "1K", "quality": "medium", "parallel": ""}
+queries = {"size": "size == 1K", "quality": "quality == medium", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp.query(make_query(avg=True)))
