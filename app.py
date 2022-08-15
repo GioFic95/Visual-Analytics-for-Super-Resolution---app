@@ -82,15 +82,15 @@ print("authorization:", authorization_url, state)
 
 curr_dfs = get_df(csv_all, types)
 curr_dfp = all_to_avg(curr_dfs)
-queries = {"size": "", "quality": "", "parallel": ""}
+queries = {"size": "1K", "quality": "medium", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
-par = parallel_plot(curr_dfp)
+par = parallel_plot(curr_dfp.query(make_query(avg=True)))
 scat = scatter_plot(curr_dfs, "PSNR", "MS-SSIM", [])
 last_m12 = [None, None]
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
-                                  figure=par, id=f"my-graph-pp", style={'height': 600}),
+                                  figure=par, id=f"my-graph-pp", style={'height': 400}),
                         className='row')
 div_scatter = html.Div([
     html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},

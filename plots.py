@@ -25,7 +25,7 @@ def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None,
             ]),
             line=dict(color=names_ids, autocolorscale=True)
         ),
-        layout=go.Layout(height=600)
+        layout=go.Layout(height=400)
     )
 
 
