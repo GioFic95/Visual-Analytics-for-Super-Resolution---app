@@ -90,7 +90,7 @@ scat = scatter_plot(curr_dfs, "PSNR", "MS-SSIM", [])
 last_m12 = [None, None]
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
-                                  figure=par, id=f"my-graph-pp", style={'height': 500}),
+                                  figure=par, id=f"my-graph-pp", style={'height': 600}),
                         className='row')
 div_scatter = html.Div([
     html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
