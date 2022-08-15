@@ -108,7 +108,7 @@ size_radio = dcc.RadioItems({"1K": "1K", "SD": "SD"}, "1K", id="size-radio",
 size_div = html.Div([size_label, size_radio], className="col")
 
 quality_label = html.Label("Quality:", style={'font-weight': 'bold', 'margin-bottom': 10})
-quality_radio = dcc.RadioItems({"low": "Low", "medium": "Medium", "high": "High"}, "",
+quality_radio = dcc.RadioItems({"low": "Low", "medium": "Medium", "high": "High"}, "medium",
                                id="quality-radio", className="form-check", labelStyle={'display': 'flex'},
                                inputClassName="form-check-input", labelClassName="form-check-label")
 quality_div = html.Div([quality_label, quality_radio], className="col")
