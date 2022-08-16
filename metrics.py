@@ -19,7 +19,7 @@ def adapt_benchmark(benchmark_path: Path, out_csv_path: Path):
             in_df["category"] = [pipeline for _ in range(len(in_df))]
             out_df = pd.concat([out_df, in_df])
     out_df.rename(columns={"filename": "name"}, inplace=True)
-    out_df["name"] = out_df.apply(lambda x: f"{x.name:0>5}_{x['size']}_{x.quality}_{x.category}", axis=1)
+    out_df["name"] = out_df.apply(lambda x: f"{x.name:0>5}_{x['size']}_{x.quality}_{x.category}.png", axis=1)
     out_df.sort_values(["name", "size", "quality"], inplace=True)
     out_df.to_csv(out_csv_path, index=False)
 

@@ -86,7 +86,7 @@ queries = {"size": "size == '1K'", "quality": "quality == 'medium'", "parallel":
 constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp.query(make_query(avg=True)))
-scat = scatter_plot(curr_dfs, "PSNR", "MS-SSIM", [])
+scat = scatter_plot(curr_dfs.query(make_query()), "PSNR", "MS-SSIM", [])
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                                   figure=par, id=f"my-graph-pp", style={'height': 400}),
@@ -359,7 +359,7 @@ def display_click_data(click_data, graph, store_gt, store_res):
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         gt_name = f"{name.split('_')[0]}_{name.split('_')[1]}_original.png"
-        res_name = f"{name}.png"
+        res_name = name
         print("OOOOOOOH", name, gt_name, res_name, files_gt, files_res)
         try:
             print("AAAAAAAAA", gt_name, files_gt[gt_name], res_name, files_res[res_name])
