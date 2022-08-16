@@ -265,7 +265,7 @@ def update_sp(radio_size, radio_qual, selection, old_scat, old_par, store_highli
     trigger = ctx.triggered_id
     print("trigger:", trigger)
     if trigger is None:
-        return old_scat, old_par, str(len(curr_dfs))
+        return old_scat, old_par, str(len(curr_dfs.query(make_query())))
     elif trigger == "my-graph-pp":
         return update_sp_parallel(selection, old_scat, old_par, store_highlights)
     else:

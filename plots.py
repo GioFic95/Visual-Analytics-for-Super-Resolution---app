@@ -46,7 +46,7 @@ def scatter_plot(df: pd.DataFrame, x_name: str = "PSNR", y_name: str = "MS-SSIM"
             mode='markers',
             text=dfg["name"],
             name=category,
-            hovertemplate='<b>%{text}</b><br><i>{x_name}</i>: %{x:.3f}<br><i>y_name</i>: %{y:.3f}<extra></extra>',
+            hovertemplate=f'<b>%{{text}}</b><br><i>{x_name}</i>: %{{x:.3f}}<br><i>{y_name}</i>: %{{y:.3f}}<extra></extra>',
             marker=dict(opacity=opacs,
                         size=sizes,
                         symbol=symbols,
