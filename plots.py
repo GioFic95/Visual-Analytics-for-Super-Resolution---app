@@ -29,7 +29,7 @@ def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None,
     )
 
 
-def scatter_plot(df: pd.DataFrame, x: str, y: str, highlights: List[str] = []):
+def scatter_plot(df: pd.DataFrame, x: str = "PSNR", y: str = "MS-SSIM", highlights: List[str] = []):
     print("new scatter plot with highlights", highlights)
     scatter = go.Figure()
 

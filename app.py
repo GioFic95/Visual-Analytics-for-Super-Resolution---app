@@ -87,7 +87,6 @@ constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp.query(make_query(avg=True)))
 scat = scatter_plot(curr_dfs, "PSNR", "MS-SSIM", [])
-last_m12 = [None, None]
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                                   figure=par, id=f"my-graph-pp", style={'height': 400}),
@@ -245,10 +244,10 @@ def complete_auth(pathname, old_scat):
         if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
         highlights[:] = list(files_res.keys())
-        new_scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+        new_scat = scatter_plot(curr_dfs, highlights=highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return f" Complete auth: {pathname}, {credentials}", new_div, files_gt, files_res, highlights
+        return " Authorized", new_div, files_gt, files_res, highlights
 
 
 @app.callback(
@@ -284,7 +283,7 @@ def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights):
     if len(query_dfs):
         updated_dfs = curr_dfs.query(query_dfs)
         print(updated_dfs.shape)
-        new_scat = scatter_plot(updated_dfs, "PSNR", "MS-SSIM", highlights)
+        new_scat = scatter_plot(updated_dfs, highlights=highlights)
         new_scat.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         count = len(updated_dfs)
     else:
@@ -337,10 +336,9 @@ def update_sp_parallel(selection, old_scat, old_par, highlights):
 
         traces = [traces[i] for i in idxs]
 
-        m1, m2 = last_m12
         queries["parallel"] = f"category in {[t for t in traces]}"
         updated_df = curr_dfs.query(make_query())
-        new_scat = scatter_plot(updated_df, m1, m2, highlights)
+        new_scat = scatter_plot(updated_df, highlights=highlights)
         print("constraint_ranges update_sp_parallel:", constraint_ranges)
         return new_scat, old_par, str(len(updated_df))
 
