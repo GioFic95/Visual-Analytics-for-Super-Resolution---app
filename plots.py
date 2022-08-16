@@ -29,7 +29,7 @@ def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None,
     )
 
 
-def scatter_plot(df: pd.DataFrame, x: str = "PSNR", y: str = "MS-SSIM", highlights: List[str] = []):
+def scatter_plot(df: pd.DataFrame, x_name: str = "PSNR", y_name: str = "MS-SSIM", highlights: List[str] = []):
     print("new scatter plot with highlights", highlights)
     scatter = go.Figure()
 
@@ -41,12 +41,12 @@ def scatter_plot(df: pd.DataFrame, x: str = "PSNR", y: str = "MS-SSIM", highligh
                    "circle" for n in dfg["name"]]
 
         scatter.add_trace(go.Scatter(
-            x=dfg[x],
-            y=dfg[y],
+            x=dfg[x_name],
+            y=dfg[y_name],
             mode='markers',
             text=dfg["name"],
             name=category,
-            hovertemplate='<b>%{text}</b><br><i>PSNR</i>: %{x:$.3f}<br><i>MS-SSIM</i>: %{y:$.3f}<extra></extra>',
+            hovertemplate='<b>%{text}</b><br><i>{x_name}</i>: %{x:.3f}<br><i>y_name</i>: %{y:.3f}<extra></extra>',
             marker=dict(opacity=opacs,
                         size=sizes,
                         symbol=symbols,
@@ -54,8 +54,8 @@ def scatter_plot(df: pd.DataFrame, x: str = "PSNR", y: str = "MS-SSIM", highligh
                         )))
 
     scatter.update_layout(
-        xaxis_title=x,
-        yaxis_title=y,
+        xaxis_title=x_name,
+        yaxis_title=y_name,
         clickmode='event+select',
         height=800,
         legend=dict(

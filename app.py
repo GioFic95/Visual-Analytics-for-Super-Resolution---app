@@ -244,7 +244,7 @@ def complete_auth(pathname, old_scat):
         if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
         highlights[:] = list(files_res.keys())
-        new_scat = scatter_plot(curr_dfs, highlights=highlights)
+        new_scat = scatter_plot(curr_dfs.query(make_query()), highlights=highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
         return " Authorized", new_div, files_gt, files_res, highlights
