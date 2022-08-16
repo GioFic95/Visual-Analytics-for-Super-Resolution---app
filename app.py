@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from datetime import datetime
 import traceback
 from pathlib import Path
@@ -21,7 +22,7 @@ from flask import request
 import flask
 
 from plots import parallel_plot, scatter_plot
-from metrics import get_df, all_to_avg
+from utils import get_df, all_to_avg, make_query
 
 
 csv_all = Path("./assets/saipem_all.csv")
@@ -29,16 +30,6 @@ types = {"name": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": s
 ds_suffix = "saipem"
 gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
 gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"
-
-
-def make_query(avg: bool = False) -> str:
-    if avg:
-        query_list = [v for k, v in queries.items() if v != "" and k != "parallel"]
-    else:
-        query_list = [v for v in queries.values() if v != ""]
-    query = " & ".join(query_list)
-    print("query:", query)
-    return query
 
 
 title = "Visual Analytics for Underwater Super Resolution"
@@ -82,11 +73,11 @@ print("authorization:", authorization_url, state)
 
 curr_dfs = get_df(csv_all, types)
 curr_dfp = all_to_avg(curr_dfs)
-queries = {"size": "size == '1K'", "quality": "quality == 'medium'", "parallel": ""}
+curr_queries = {"size": "size == '1K'", "quality": "quality == 'medium'", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
-par = parallel_plot(curr_dfp.query(make_query(avg=True)))
-scat = scatter_plot(curr_dfs.query(make_query()), "PSNR", "MS-SSIM", [])
+par = parallel_plot(curr_dfp.query(make_query(curr_queries, avg=True)))
+scat = scatter_plot(curr_dfs.query(make_query(curr_queries)), "PSNR", "MS-SSIM", [])
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                                   figure=par, id=f"my-graph-pp", style={'height': 400}),
@@ -130,6 +121,7 @@ div_storage = html.Div([
     dcc.Store(id='store_gt', storage_type='session'),
     dcc.Store(id='store_res', storage_type='session'),
     dcc.Store(id='store_highlights', storage_type='session'),
+    dcc.Store(id='store_queries', storage_type='session'),
 ])
 
 app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatter, div_storage])
@@ -141,10 +133,13 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
     Output('store_gt', 'data'),
     Output('store_res', 'data'),
     Output('store_highlights', 'data'),
+    Output('size-radio', 'value'),
+    Output('quality-radio', 'value'),
     Input('url', 'href'),
-    State('my-graph-sp', 'figure')
+    State('my-graph-sp', 'figure'),
+    State('store_queries', 'data'),
 )
-def complete_auth(pathname, old_scat):
+def complete_auth(pathname, old_scat, store_queries):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     flask.session['state'] = state
@@ -154,6 +149,13 @@ def complete_auth(pathname, old_scat):
     files_gt = dict()
     files_res = dict()
     highlights = []
+    if store_queries:
+        queries = store_queries
+    else:
+        queries = curr_queries
+
+    size = re.search("'(?P<g>.*)'", queries['size']).group('g')
+    qual = re.search("'(?P<g>.*)'", queries['quality']).group('g')
 
     with open(logs_path, 'r+') as logs_file:
         print("logs_file 2:", logs_file.read())
@@ -200,14 +202,14 @@ def complete_auth(pathname, old_scat):
                 print("ERROR:", mse, traceback.format_exc())
                 old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                     figure=old_scat, id=f"my-graph-sp")
-                return f" Authentication failed", old_div, files_gt, files_res, highlights
+                return f" Authentication failed", old_div, files_gt, files_res, highlights, size, qual
 
         # if first access, do nothing
         else:
             print("cache 4 (no query):", cache)
             old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                 figure=old_scat, id=f"my-graph-sp")
-            return f" Non authorized", old_div, files_gt, files_res, highlights
+            return f" Non authorized", old_div, files_gt, files_res, highlights, size, qual
 
     total = 0
     try:
@@ -239,47 +241,56 @@ def complete_auth(pathname, old_scat):
     if len(files_res) + len(files_gt) == 0:
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f" Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights
+        return f" Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights,\
+               size, qual
     else:
         if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
         highlights[:] = list(files_res.keys())
-        new_scat = scatter_plot(curr_dfs.query(make_query()), highlights=highlights)
+        new_scat = scatter_plot(curr_dfs.query(make_query(queries)), highlights=highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return " Authorized", new_div, files_gt, files_res, highlights
+        return " Authorized", new_div, files_gt, files_res, highlights, size, qual
 
 
 @app.callback(
     Output('my-graph-sp', 'figure'),
     Output('my-graph-pp', 'figure'),
     Output('count_lab', 'children'),
+    Output('store_queries', 'data'),
     Input('size-radio', 'value'),
     Input('quality-radio', 'value'),
     Input('my-graph-pp', 'restyleData'),
     State('my-graph-sp', 'figure'),
     State('my-graph-pp', 'figure'),
     State('store_highlights', 'data'),
+    State('store_queries', 'data'),
 )
-def update_sp(radio_size, radio_qual, selection, old_scat, old_par, store_highlights):
+def update_sp(radio_size, radio_qual, selection, old_scat, old_par, store_highlights, store_queries):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
-    if trigger is None:
-        return old_scat, old_par, str(len(curr_dfs.query(make_query())))
-    elif trigger == "my-graph-pp":
-        return update_sp_parallel(selection, old_scat, old_par, store_highlights)
+
+    if store_queries:
+        queries = store_queries
     else:
-        return update_sp_buttons(radio_size, radio_qual, old_scat, old_par, store_highlights)
+        queries = curr_queries
+
+    if trigger is None:
+        return old_scat, old_par, str(len(curr_dfs.query(make_query(queries)))), queries
+    elif trigger == "my-graph-pp":
+        return update_sp_parallel(selection, old_scat, old_par, store_highlights, queries)
+    else:
+        return update_sp_buttons(radio_size, radio_qual, old_scat, old_par, store_highlights, queries)
 
 
-def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights):
+def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights, queries):
     print('update_sp', radio_size, radio_qual)
 
     count = len(curr_dfs)
     queries["size"] = f"size == '{radio_size}'" if radio_size != "" else ""
     queries["quality"] = f"quality == '{radio_qual}'" if radio_qual != "" else ""
 
-    query_dfs = make_query()
+    query_dfs = make_query(queries)
     if len(query_dfs):
         updated_dfs = curr_dfs.query(query_dfs)
         print(updated_dfs.shape)
@@ -289,7 +300,7 @@ def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights):
     else:
         new_scat = old_scat
 
-    query_dfp = make_query(avg=True)
+    query_dfp = make_query(queries, avg=True)
     if len(query_dfp) > 0:
         updated_dfp = curr_dfp.query(query_dfp)
         print(updated_dfp.shape)
@@ -298,14 +309,14 @@ def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights):
     else:
         new_par = old_par
 
-    return new_scat, new_par, str(count)
+    return new_scat, new_par, str(count), queries
 
 
-def update_sp_parallel(selection, old_scat, old_par, highlights):
+def update_sp_parallel(selection, old_scat, old_par, highlights, queries):
     print("selection:", selection)
 
     if selection is None:
-        return old_scat, old_par, str(len(curr_dfs))
+        return old_scat, old_par, str(len(curr_dfs)), queries
     else:
         curr_dims = old_par['data'][0].get('dimensions', [])
         dim = curr_dims[-1]
@@ -337,10 +348,10 @@ def update_sp_parallel(selection, old_scat, old_par, highlights):
         traces = [traces[i] for i in idxs]
 
         queries["parallel"] = f"category in {[t for t in traces]}"
-        updated_df = curr_dfs.query(make_query())
+        updated_df = curr_dfs.query(make_query(queries))
         new_scat = scatter_plot(updated_df, highlights=highlights)
         print("constraint_ranges update_sp_parallel:", constraint_ranges)
-        return new_scat, old_par, str(len(updated_df))
+        return new_scat, old_par, str(len(updated_df)), queries
 
 
 @app.callback(

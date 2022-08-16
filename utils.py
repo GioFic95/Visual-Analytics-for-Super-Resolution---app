@@ -9,6 +9,16 @@ def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
     return df
 
 
+def make_query(queries: dict, avg: bool = False) -> str:
+    if avg:
+        query_list = [v for k, v in queries.items() if v != "" and k != "parallel"]
+    else:
+        query_list = [v for v in queries.values() if v != ""]
+    query = " & ".join(query_list)
+    print("query:", query)
+    return query
+
+
 def adapt_benchmark(benchmark_path: Path, out_csv_path: Path):
     out_df = pd.DataFrame(columns=["filename", "MS-SSIM", "PSNR", "category", "quality", "size"])
     for size in ["1K", "SD"]:
