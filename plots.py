@@ -45,7 +45,7 @@ def scatter_plot(df: pd.DataFrame, x: str = "PSNR", y: str = "MS-SSIM", highligh
             y=dfg[y],
             mode='markers',
             text=dfg["name"],
-            name=category,
+            # name=category,
             marker=dict(opacity=opacs,
                         size=sizes,
                         symbol=symbols,

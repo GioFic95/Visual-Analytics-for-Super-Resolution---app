@@ -92,7 +92,7 @@ div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick'
                                   figure=par, id=f"my-graph-pp", style={'height': 400}),
                         className='row')
 div_scatter = html.Div([
-    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},  # style={"margin-top": 34},
+    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                        figure=scat, id=f"my-graph-sp"), id=f"my-div-sp", className='col-8'),
     html.Div([html.Div(f"Please, select a star point from the scatter plot",
                        style={"margin-top": 10, "margin-bottom": 10}),
@@ -349,10 +349,8 @@ def update_sp_parallel(selection, old_scat, old_par, highlights):
     Input('my-graph-sp', 'figure'),
     State('store_gt', 'data'),
     State('store_res', 'data'),
-    State('size-radio', 'value'),
-    State('quality-radio', 'value'),
 )
-def display_click_data(click_data, graph, store_gt, store_res, radio_size, radio_qual):
+def display_click_data(click_data, graph, store_gt, store_res):
     if click_data is not None:
         files_gt = store_gt
         files_res = store_res
@@ -360,8 +358,8 @@ def display_click_data(click_data, graph, store_gt, store_res, radio_size, radio
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
-        gt_name = f"{name}_{radio_size}_original.png"
-        res_name = f"{name}_{radio_size}_{radio_qual}_{trace}"
+        gt_name = f"{name.split('_')[0]}_{name.split('_')[1]}_original.png"
+        res_name = f"{name}.png"
         print("OOOOOOOH", name, gt_name, res_name, files_gt, files_res)
         try:
             print("AAAAAAAAA", gt_name, files_gt[gt_name], res_name, files_res[res_name])
