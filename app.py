@@ -93,7 +93,7 @@ div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick'
                                   figure=par, id=f"my-graph-pp", style={'height': 400}),
                         className='row')
 div_scatter = html.Div([
-    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},  # style={"margin-top": 34},
                        figure=scat, id=f"my-graph-sp"), id=f"my-div-sp", className='col-8'),
     html.Div([html.Div(f"Please, select a star point from the scatter plot",
                        style={"margin-top": 10, "margin-bottom": 10}),
@@ -262,7 +262,7 @@ def complete_auth(pathname, old_scat):
     State('my-graph-pp', 'figure'),
     State('store_highlights', 'data'),
 )
-def update_sp(radio_ds, radio_cp, selection, old_scat, old_par, store_highlights):
+def update_sp(radio_size, radio_qual, selection, old_scat, old_par, store_highlights):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
     if trigger is None:
@@ -270,7 +270,7 @@ def update_sp(radio_ds, radio_cp, selection, old_scat, old_par, store_highlights
     elif trigger == "my-graph-pp":
         return update_sp_parallel(selection, old_scat, old_par, store_highlights)
     else:
-        return update_sp_buttons(radio_ds, radio_cp, old_scat, old_par, store_highlights)
+        return update_sp_buttons(radio_size, radio_qual, old_scat, old_par, store_highlights)
 
 
 def update_sp_buttons(radio_size, radio_qual, old_scat, old_par, highlights):
@@ -351,25 +351,26 @@ def update_sp_parallel(selection, old_scat, old_par, highlights):
     Input('my-graph-sp', 'figure'),
     State('store_gt', 'data'),
     State('store_res', 'data'),
+    State('size-radio', 'value'),
+    State('quality-radio', 'value'),
 )
-def display_click_data(click_data, graph, store_gt, store_res):
+def display_click_data(click_data, graph, store_gt, store_res, radio_size, radio_qual):
     if click_data is not None:
-        print("type(store_gt):", type(store_gt))
         files_gt = store_gt
         files_res = store_res
 
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
-        gt_name = name.split("_")[0] + ".png"
-        print("OOOOOOOH", gt_name, name, files_gt, files_res)
+        gt_name = f"{name}_{radio_size}_original.png"
+        res_name = f"{name}_{radio_size}_{radio_qual}_{trace}"
+        print("OOOOOOOH", name, gt_name, res_name, files_gt, files_res)
         try:
-            res_img = files_res.get(name, None)
-            print("AAAAAAAAA", gt_name, files_gt[gt_name], files_res.get(name, None), res_img)
+            print("AAAAAAAAA", gt_name, files_gt[gt_name], res_name, files_res[res_name])
             new_div = html.Div([
                 html.Img(src=files_gt[gt_name], height=395),
-                html.Img(src=res_img, height=395),
-                html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
+                html.Img(src=files_res[res_name], height=395),
+                html.Div(name, style={"margin-top": 10, "margin-bottom": 15}),
             ])
         except KeyError:
             new_div = html.Div([
