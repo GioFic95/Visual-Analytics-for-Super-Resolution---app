@@ -112,9 +112,9 @@ div_buttons = html.Div([size_div, quality_div, count_div], className="row", styl
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
 div_auth = html.Div([
-    html.A(html.Button("Click to authorize Google Drive"), href=authorization_url),
+    html.A(html.Button("Click to authorize Google Drive"), href=authorization_url, style={"margin": 15}),
     dcc.Location(id='url', refresh=False),
-    html.Label(" Non authorized", id='credentials-label')
+    html.Label("Non authorized", id='credentials-label', style={"margin": 15})
 ])
 
 div_storage = html.Div([
