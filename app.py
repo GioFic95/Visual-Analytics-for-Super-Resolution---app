@@ -112,7 +112,8 @@ div_buttons = html.Div([size_div, quality_div, count_div], className="row", styl
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
 div_auth = html.Div([
-    html.A(html.Button("Click to authorize Google Drive"), href=authorization_url, style={"margin": 15}),
+    html.A(html.Button("Click to authorize Google Drive"), href=authorization_url, style={"margin": 15},
+           id='credentials-link'),
     dcc.Location(id='url', refresh=False),
     html.Label("Non authorized", id='credentials-label', style={"margin": 15})
 ])
@@ -136,6 +137,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
     Output('size-radio', 'value'),
     Output('quality-radio', 'value'),
     Output('credentials-label', 'style'),
+    Output('credentials-link', 'style'),
     Input('url', 'href'),
     State('my-graph-sp', 'figure'),
     State('store_queries', 'data'),
@@ -203,14 +205,16 @@ def complete_auth(pathname, old_scat, store_queries):
                 print("ERROR:", mse, traceback.format_exc())
                 old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                     figure=old_scat, id=f"my-graph-sp")
-                return f"Authentication failed", old_div, files_gt, files_res, highlights, size, qual, {'color': 'red'}
+                return f"Authentication failed", old_div, files_gt, files_res, highlights, size, qual,\
+                       {'color': 'red'}, {'visibility': 'visible'}
 
         # if first access, do nothing
         else:
             print("cache 4 (no query):", cache)
             old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                 figure=old_scat, id=f"my-graph-sp")
-            return f"Non authorized", old_div, files_gt, files_res, highlights, size, qual, {'color': 'black'}
+            return f"Non authorized", old_div, files_gt, files_res, highlights, size, qual,\
+                   {'color': 'black'}, {'visibility': 'visible'}
 
     total = 0
     try:
@@ -242,8 +246,8 @@ def complete_auth(pathname, old_scat, store_queries):
     if len(files_res) + len(files_gt) == 0:
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f" Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights,\
-               size, qual, {'color': 'orange'}
+        return f"Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights,\
+               size, qual, {'color': 'orange'}, {'visibility': 'hidden'}
     else:
         if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
@@ -251,7 +255,8 @@ def complete_auth(pathname, old_scat, store_queries):
         new_scat = scatter_plot(curr_dfs.query(make_query(queries)), highlights=highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return " Authorized", new_div, files_gt, files_res, highlights, size, qual, {'color': 'green'}
+        return "Authorized", new_div, files_gt, files_res, highlights, size, qual,\
+               {'color': 'green'}, {'visibility': 'hidden'}
 
 
 @app.callback(
