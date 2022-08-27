@@ -206,7 +206,7 @@ def complete_auth(pathname, old_scat, store_queries):
                 old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                     figure=old_scat, id=f"my-graph-sp")
                 return f"Authentication failed", old_div, files_gt, files_res, highlights, size, qual,\
-                       {'color': 'red'}, {'visibility': 'visible'}
+                       {'color': 'red', 'margin': 15}, {'visibility': 'visible', 'margin': 15}
 
         # if first access, do nothing
         else:
@@ -214,7 +214,7 @@ def complete_auth(pathname, old_scat, store_queries):
             old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                 figure=old_scat, id=f"my-graph-sp")
             return f"Non authorized", old_div, files_gt, files_res, highlights, size, qual,\
-                   {'color': 'black'}, {'visibility': 'visible'}
+                   {'color': 'black', 'margin': 15}, {'visibility': 'visible', 'margin': 15}
 
     total = 0
     try:
@@ -247,7 +247,7 @@ def complete_auth(pathname, old_scat, store_queries):
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
         return f"Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights,\
-               size, qual, {'color': 'orange'}, {'visibility': 'hidden'}
+               size, qual, {'color': 'orange', 'margin': 15}, {'visibility': 'hidden', 'margin': 15}
     else:
         if len(files_res) + len(files_gt) != total:
             warnings.warn("len of dictionaries != number of files")
@@ -256,7 +256,7 @@ def complete_auth(pathname, old_scat, store_queries):
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
         return "Authorized", new_div, files_gt, files_res, highlights, size, qual,\
-               {'color': 'green'}, {'visibility': 'hidden'}
+               {'color': 'green', 'margin': 15}, {'visibility': 'hidden', 'margin': 15}
 
 
 @app.callback(
