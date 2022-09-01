@@ -70,9 +70,10 @@ div_scatter = html.Div([
               ], className='col-4')
 ], className='row')
 
-div_box = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
-                             figure=box, id=f"my-graph-box", style={'height': 600}),
-                   className='row')
+div_box = html.Div([dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
+                              figure=box, id=f"my-graph-box", style={'height': 600}, className='col-8'),
+                    html.Div(id=f"box-img")
+                    ], className='row')
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
 dataset_radio = dcc.RadioItems({"isb": "F4K+", "saipem": "Saipem", "": "All"}, "isb", id="dataset-radio",
@@ -233,11 +234,12 @@ def display_click_data(click_data, graph):
 
 
 @app.callback(
+    Output('out-img', 'children'),
     Input('my-graph-box', 'clickData'),
     Input('my-graph-box', 'figure'),
 )
 def display_click_box(click_data, graph):
-    print("BOX:", click_data)
+    print("BOX:", click_data, graph)
 
 
 if __name__ == '__main__':
