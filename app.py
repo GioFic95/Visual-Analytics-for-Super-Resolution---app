@@ -195,8 +195,8 @@ def display_click_data(click_data, graph):
         gt_path = f"imgs/gt/{name.split('_')[0]}.png"
         if ("static" / Path(img_path)).is_file():
             new_div = html.Div([
-                html.Img(src=gt_path, height=395),
-                html.Img(src=img_path, height=395),
+                html.Img(src=gt_path, height=350),
+                html.Img(src=img_path, height=350),
                 html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
             ])
         else:
