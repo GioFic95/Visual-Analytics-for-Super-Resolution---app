@@ -48,7 +48,7 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
-queries = {"dataset": "isb", "compression": "img", "parallel": ""}
+queries = {"dataset": "train == 'isb'", "compression": "type == 'img'", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
 par = parallel_plot(curr_dfp.query(make_query(avg=True)))
