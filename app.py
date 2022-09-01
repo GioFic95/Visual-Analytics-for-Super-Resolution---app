@@ -198,7 +198,7 @@ def display_click_data(click_data, graph):
         suffix = "isb_test_h265" if "vid" in trace else "isb_test_webp"
         img_path = f"imgs/{suffix}/{name}"
         gt_path = f"imgs/gt/{name.split('_')[0]}.png"
-        if Path("static" / img_path).is_file():
+        if "static" / Path(img_path).is_file():
             new_div = html.Div([
                 html.Img(src=gt_path, height=395),
                 html.Img(src=img_path, height=395),
