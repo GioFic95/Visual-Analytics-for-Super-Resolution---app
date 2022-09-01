@@ -50,6 +50,7 @@ par = parallel_plot(curr_dfp.query(make_query(avg=True)))
 tmp_dfs = curr_dfs.query(make_query())
 scat = scatter_plot(tmp_dfs, "ssim", "psnr_rgb", highlights)
 box = box_plot(tmp_dfs, "ssim")
+item_num = str(len(tmp_dfs))
 del tmp_dfs
 metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)] + ["pca_x VS pca_y"]
 boxmetrics = metrics + ["pca_x", "pca_y"]
@@ -96,7 +97,7 @@ metrics_div = html.Div([metrics_label, metrics_dd], className="col")
 
 boxmetric_label = html.Label("Box metric:", style={'font-weight': 'bold', "text-align": "center", 'margin-bottom': 10})
 boxmetric_dd = dcc.Dropdown(
-                id="boxmetric-dropdown",
+                id="boxmetrics-dropdown",
                 options=boxmetrics,
                 value="ssim",
                 style={'width': '200px'}
@@ -104,7 +105,7 @@ boxmetric_dd = dcc.Dropdown(
 boxmetric_div = html.Div([boxmetric_label, boxmetric_dd], className="col")
 
 count_label = html.Label("Number of items:", style={'font-weight': 'bold', 'margin-bottom': 10})
-count_field = html.Div(html.Label("Counting...", id="count_lab"), id="count_div")
+count_field = html.Div(html.Label(item_num, id="count_lab"), id="count_div")
 count_div = html.Div([count_label, count_field], className="col")
 
 div_buttons = html.Div([dataset_div, compression_div, metrics_div, boxmetric_div, count_div],
