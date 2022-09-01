@@ -8,7 +8,7 @@ import pandas as pd
 import dash
 from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
-import dash_auth
+# import dash_auth
 from whitenoise import WhiteNoise
 try:
     import gunicorn
@@ -45,10 +45,10 @@ def make_query(avg: bool = False) -> str:
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
-auth = dash_auth.BasicAuth(
-    app,
-    {os.environ.get('USER', None): os.environ.get('PASS', None)}
-)
+# auth = dash_auth.BasicAuth(
+#     app,
+#     {os.environ.get('USER', None): os.environ.get('PASS', None)}
+# )
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
@@ -66,7 +66,7 @@ div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick'
                                   figure=par, id=f"my-graph-pp", style={'height': 500}),
                         className='row')
 div_scatter = html.Div([
-    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
+    html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},  # style={"margin-top": 34},
                        figure=scat, id=f"my-graph-sp"), id=f"my-div-sp", className='col-8'),
     html.Div([html.Div(f"Please, select a star point from the scatter plot",
                        style={"margin-top": 10, "margin-bottom": 10}),
@@ -120,7 +120,9 @@ app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
 def update_sp(drop_mc, radio_ds, radio_cp, selection, old_scat, old_par):
     trigger = ctx.triggered_id
     print("trigger:", trigger)
-    if trigger == "my-graph-pp":
+    if trigger is None:
+        return old_scat, old_par, str(len(curr_dfs.query(make_query())))
+    elif trigger == "my-graph-pp":
         return update_sp_parallel(selection, old_scat, old_par)
     else:
         return update_sp_buttons(drop_mc, radio_ds, radio_cp)
