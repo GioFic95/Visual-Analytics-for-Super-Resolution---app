@@ -1,6 +1,6 @@
 import itertools
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -48,11 +48,11 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
-queries = {"dataset": "", "compression": "", "parallel": ""}
+queries = {"dataset": "isb", "compression": "img", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
-par = parallel_plot(curr_dfp)
-scat = scatter_plot(curr_dfs, "ssim", "psnr_rgb", highlights)
+par = parallel_plot(curr_dfp.query(make_query(avg=True)))
+scat = scatter_plot(curr_dfs.query(make_query()), "ssim", "psnr_rgb", highlights)
 metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)]
 last_m12 = [None, None]
 
