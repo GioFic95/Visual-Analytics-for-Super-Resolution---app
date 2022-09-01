@@ -1,6 +1,7 @@
 from typing import List
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 
 
 def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None, None)):
@@ -70,3 +71,30 @@ def scatter_plot(df: pd.DataFrame, x: str, y: str, highlights: List[str] = []):
     )
 
     return scatter
+
+
+def box_plot(df: pd.DataFrame, metric: str):
+    tmp_df = df[["name", metric]].copy()
+    tmp_df["img"] = tmp_df["name"].apply(lambda x: x.split("_")[0])
+
+    avg_df = tmp_df.groupby(by="img").agg(['var', 'std', 'max', 'min', 'mean', 'median'])
+    avg_df["mm"] = avg_df.apply(lambda x: x[metric]['max']-x[metric]['min'], axis=1)
+
+    top = []
+    for stat in [(metric, s) for s in ['var', 'std', 'mean', 'median']] + ['mm']:
+        best_var = avg_df.sort_values(stat)
+        top += list(best_var[-5:].index)
+        top += list(best_var[:5].index)
+    top_set = set(top)
+
+    box = px.box(tmp_df[tmp_df['img'].isin(top_set)], x="img", y=metric)
+    return box
+
+
+if __name__ == '__main__':
+    from utils import get_df
+    from pathlib import Path
+    types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
+             "type": str, "mask": bool, "category": str}
+    df = get_df(Path("./assets/test_results_all_isb.csv"), types)
+    box_plot(df, "ssim").write_html(f"{metric}_box.html")
