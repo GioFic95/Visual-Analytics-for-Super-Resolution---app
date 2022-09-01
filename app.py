@@ -232,6 +232,15 @@ def display_click_data(click_data, graph):
         return None
 
 
+@app.callback(
+    Output('my-img', 'children'),
+    Input('my-graph-box', 'clickData'),
+    Input('my-graph-box', 'figure'),
+)
+def display_click_box(click_data, graph):
+    print("BOX:", click_data)
+
+
 if __name__ == '__main__':
     print("server:", server)
     app.run(debug=True, use_reloader=False)
