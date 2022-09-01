@@ -1,13 +1,14 @@
 import itertools
 from pathlib import Path
-from typing import Dict
 
 import numpy as np
-import pandas as pd
 import dash
 from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
 from whitenoise import WhiteNoise
+
+from utils import get_df, compute_pca
+
 try:
     import gunicorn
 except ModuleNotFoundError:
@@ -22,13 +23,8 @@ types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips"
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
 highlights = [f.name for f in Path("static/imgs/isb_test_h265").iterdir()]
-
-
-def get_df(csv: Path, types_dict: Dict[str, type]) -> pd.DataFrame:
-    df = pd.read_csv(csv, dtype=types_dict)
-    df.query("mask == False", inplace=True)
-    return df
-
+queries = {"dataset": "train == 'isb'", "compression": "type == 'img'", "parallel": ""}
+constraint_ranges = [None, None, None, None, None]
 
 def make_query(avg: bool = False) -> str:
     if avg:
@@ -48,12 +44,11 @@ server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
 curr_dfp = get_df(csv_avg, types)
 curr_dfs = get_df(csv_all, types)
-queries = {"dataset": "train == 'isb'", "compression": "type == 'img'", "parallel": ""}
-constraint_ranges = [None, None, None, None, None]
+compute_pca(curr_dfs, metrics)
 
 par = parallel_plot(curr_dfp.query(make_query(avg=True)))
 scat = scatter_plot(curr_dfs.query(make_query()), "ssim", "psnr_rgb", highlights)
-metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)]
+metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)] + ["pca_x VS pca_y"]
 last_m12 = [None, None]
 
 div_parallel = html.Div(dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
