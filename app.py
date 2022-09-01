@@ -234,7 +234,7 @@ def display_click_data(click_data, graph):
 
 
 @app.callback(
-    Output('out-img', 'children'),
+    Output('box-img', 'children'),
     Input('my-graph-box', 'clickData'),
     Input('my-graph-box', 'figure'),
 )
