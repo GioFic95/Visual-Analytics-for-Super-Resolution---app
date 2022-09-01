@@ -78,13 +78,13 @@ metrics_dd = dcc.Dropdown(
 metrics_div = html.Div([metrics_label, metrics_dd], className="col")
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
-dataset_radio = dcc.RadioItems({"isb": "F4K+", "saipem": "Saipem", "": "All"}, "", id="dataset-radio",
+dataset_radio = dcc.RadioItems({"isb": "F4K+", "saipem": "Saipem", "": "All"}, "isb", id="dataset-radio",
                                className="form-check", labelStyle={'display': 'flex'},
                                inputClassName="form-check-input", labelClassName="form-check-label")
 dataset_div = html.Div([dataset_label, dataset_radio], className="col")
 
 compression_label = html.Label("Compression type:", style={'font-weight': 'bold', 'margin-bottom': 10})
-compression_radio = dcc.RadioItems({"img": "Image Compression", "vid": "Video Compression", "": "All"}, "",
+compression_radio = dcc.RadioItems({"img": "Image Compression", "vid": "Video Compression", "": "All"}, "img",
                                    id="compression-radio", className="form-check", labelStyle={'display': 'flex'},
                                    inputClassName="form-check-input", labelClassName="form-check-label")
 compression_div = html.Div([compression_label, compression_radio], className="col")
