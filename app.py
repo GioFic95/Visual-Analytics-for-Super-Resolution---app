@@ -97,7 +97,7 @@ count_div = html.Div([count_label, count_field], className="col")
 
 div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div], className="row", style={"margin": 15})
 
-app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter])
+app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter, div_box])
 
 
 @app.callback(

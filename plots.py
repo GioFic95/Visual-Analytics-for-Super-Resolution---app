@@ -97,4 +97,4 @@ if __name__ == '__main__':
     types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
              "type": str, "mask": bool, "category": str}
     df = get_df(Path("./assets/test_results_all_isb.csv"), types)
-    box_plot(df, "ssim").write_html(f"{metric}_box.html")
+    box_plot(df, "ssim").write_html(f"ssim_box.html")
