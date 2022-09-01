@@ -1,5 +1,4 @@
 import itertools
-import os
 from pathlib import Path
 from typing import List, Dict
 
@@ -8,7 +7,6 @@ import pandas as pd
 import dash
 from dash import dcc, html, ctx, Output, Input, State
 import dash_bootstrap_components as dbc
-# import dash_auth
 from whitenoise import WhiteNoise
 try:
     import gunicorn
@@ -45,10 +43,6 @@ def make_query(avg: bool = False) -> str:
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
                 suppress_callback_exceptions=True)
-# auth = dash_auth.BasicAuth(
-#     app,
-#     {os.environ.get('USER', None): os.environ.get('PASS', None)}
-# )
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 
@@ -203,12 +197,17 @@ def display_click_data(click_data, graph):
         name = click_data['points'][0]['text']
         suffix = "isb_test_h265" if "vid" in trace else "isb_test_webp"
         img_path = f"imgs/{suffix}/{name}"
-        gt_name = name.split("_")[0] + ".png"
-        new_div = html.Div([
-            html.Img(src=f"imgs/gt/{gt_name}", height=395),
-            html.Img(src=img_path, height=395),
-            html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
-        ])
+        gt_path = f"imgs/gt/{name.split('_')[0]}.png"
+        if Path(img_path).is_file():
+            new_div = html.Div([
+                html.Img(src=gt_path, height=395),
+                html.Img(src=img_path, height=395),
+                html.Div(f"{name} ({trace})", style={"margin-top": 10, "margin-bottom": 15}),
+            ])
+        else:
+            new_div = html.Div([
+                "You must select a star."
+            ])
         return new_div
     else:
         return None
