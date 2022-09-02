@@ -21,7 +21,7 @@ csv_all = Path("./assets/test_results_all_isb.csv")
 types = {"name": str, "ssim": float, "psnr_rgb": float, "psnr_y": float, "lpips": float,
          "type": str, "mask": bool, "category": str}
 metrics = ["ssim", "psnr_rgb", "psnr_y", "lpips"]
-highlights = [f.name for f in Path("static/imgs/isb_test_h265").iterdir()]
+highlights = [f.stem + ".png" for f in Path("static/imgs/isb_test_h265").iterdir()]
 queries = {"dataset": "train == 'isb'", "compression": "type == 'img'", "parallel": ""}
 constraint_ranges = [None, None, None, None, None]
 
@@ -71,7 +71,7 @@ div_scatter = html.Div([
 ], className='row')
 div_box = html.Div([dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                               figure=box, id=f"my-graph-box", style={'height': 600}, className='col-8'),
-                    html.Div(id=f"box-img", className='col-4', style={"margin-top": 145})
+                    html.Div(id=f"box-img", className='col-4', style={"margin-top": 50})
                     ], className='row')
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
