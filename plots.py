@@ -87,7 +87,7 @@ def box_plot(df: pd.DataFrame, metric: str):
         top += list(best_var[:5].index)
     top_set = set(top)
 
-    box = px.box(tmp_df[tmp_df['img'].isin(top_set)], x="img", y=metric)
+    box = px.box(tmp_df[tmp_df['img'].isin(top_set)], x="img", y=metric, hover_name="img")
     return box
 
 

@@ -246,7 +246,6 @@ def display_click_box(click_data, graph):
             html.Img(src=img_path, height=350),
             html.Div(f"Image {img_idx}.jpg", style={"margin-top": 10, "margin-bottom": 15}),
         ])
-        print(graph['data'][0]['x'])
         return new_div
     else:
         return None
