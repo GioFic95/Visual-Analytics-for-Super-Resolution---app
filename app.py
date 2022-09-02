@@ -235,12 +235,11 @@ def display_click_data(click_data, graph):
 @app.callback(
     Output('box-img', 'children'),
     Input('my-graph-box', 'clickData'),
-    Input('my-graph-box', 'figure'),
 )
-def display_click_box(click_data, graph):
+def display_click_box(click_data):
     print("BOX:", click_data)
     if click_data is not None:
-        img_idx = graph['data'][0]['x'][click_data['points'][0]['pointIndex']]
+        img_idx = click_data['points'][0]['hovertext']
         img_path = f"imgs/box/{img_idx}.jpg"
         new_div = html.Div([
             html.Img(src=img_path, height=350),
