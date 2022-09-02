@@ -69,10 +69,9 @@ div_scatter = html.Div([
               html.Div(id=f"my-img")
               ], className='col-4')
 ], className='row')
-
 div_box = html.Div([dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                               figure=box, id=f"my-graph-box", style={'height': 600}, className='col-8'),
-                    html.Div(id=f"box-img", className='col-4')
+                    html.Div(id=f"box-img", className='col-4', style={"margin-top": 145})
                     ], className='row')
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
@@ -217,7 +216,7 @@ def display_click_data(click_data, graph):
         name = click_data['points'][0]['text']
         suffix = "isb_test_h265" if "vid" in trace else "isb_test_webp"
         img_path = f"imgs/{suffix}/{name}"
-        gt_path = f"imgs/gt/{name.split('_')[0]}.png"
+        gt_path = f"imgs/gt/{name.split('_')[0]}.jpg"
         if ("static" / Path(img_path)).is_file():
             new_div = html.Div([
                 html.Img(src=gt_path, height=350),
@@ -242,10 +241,10 @@ def display_click_box(click_data, graph):
     print("BOX:", click_data)
     if click_data is not None:
         img_idx = graph['data'][0]['x'][click_data['points'][0]['pointIndex']]
-        img_path = f"imgs/gt/{img_idx}.png"
+        img_path = f"imgs/gt/{img_idx}.jpg"
         new_div = html.Div([
             html.Img(src=img_path, height=350),
-            html.Div(f"Image {img_idx}.png", style={"margin-top": 10, "margin-bottom": 15}),
+            html.Div(f"Image {img_idx}.jpg", style={"margin-top": 10, "margin-bottom": 15}),
         ])
         print(graph['data'][0]['x'])
         return new_div
