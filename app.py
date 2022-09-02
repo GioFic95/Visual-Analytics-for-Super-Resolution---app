@@ -72,7 +72,7 @@ div_scatter = html.Div([
 
 div_box = html.Div([dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'},
                               figure=box, id=f"my-graph-box", style={'height': 600}, className='col-8'),
-                    html.Div(id=f"box-img")
+                    html.Div(id=f"box-img", className='col-4')
                     ], className='row')
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
@@ -247,6 +247,7 @@ def display_click_box(click_data, graph):
             html.Img(src=img_path, height=350),
             html.Div(f"Image {img_idx}.png", style={"margin-top": 10, "margin-bottom": 15}),
         ])
+        print(graph['data'][0]['x'])
         return new_div
     else:
         return None
