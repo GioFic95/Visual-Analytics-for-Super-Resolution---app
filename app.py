@@ -215,7 +215,7 @@ def display_click_data(click_data, graph):
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         suffix = "isb_test_h265" if "vid" in trace else "isb_test_webp"
-        img_path = f"imgs/{suffix}/{name}"
+        img_path = f"imgs/{suffix}/{name}"[:-4] + ".jpg"
         gt_path = f"imgs/gt/{name.split('_')[0]}.jpg"
         if ("static" / Path(img_path)).is_file():
             new_div = html.Div([
@@ -241,7 +241,7 @@ def display_click_box(click_data, graph):
     print("BOX:", click_data)
     if click_data is not None:
         img_idx = graph['data'][0]['x'][click_data['points'][0]['pointIndex']]
-        img_path = f"imgs/gt/{img_idx}.jpg"
+        img_path = f"imgs/box/{img_idx}.jpg"
         new_div = html.Div([
             html.Img(src=img_path, height=350),
             html.Div(f"Image {img_idx}.jpg", style={"margin-top": 10, "margin-bottom": 15}),
