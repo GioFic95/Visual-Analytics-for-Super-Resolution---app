@@ -239,7 +239,17 @@ def display_click_data(click_data, graph):
     Input('my-graph-box', 'figure'),
 )
 def display_click_box(click_data, graph):
-    print("BOX:", click_data, graph)
+    print("BOX:", click_data)
+    if click_data is not None:
+        img_idx = graph['data'][0]['x'][click_data['points'][0]['pointIndex']]
+        img_path = f"imgs/gt/{img_idx}.png"
+        new_div = html.Div([
+            html.Img(src=img_path, height=350),
+            html.Div(f"Image {img_idx}.png", style={"margin-top": 10, "margin-bottom": 15}),
+        ])
+        return new_div
+    else:
+        return None
 
 
 if __name__ == '__main__':
