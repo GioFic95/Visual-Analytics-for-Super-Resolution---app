@@ -9,7 +9,7 @@ def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None,
         raise ValueError("\n***   empty dataframe   ***")
 
     dfc = df.copy()
-    dfc["sum"] = dfc.sum(numeric_only=True)
+    dfc["sum"] = dfc["ssim"] + dfc["psnr_rgb"] + dfc["psnr_y"] - dfc["lpips"]
     dfc.sort_values(by="sum", inplace=True)
     names_ids = list(range(len(dfc["name"])))
 
