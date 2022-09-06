@@ -75,7 +75,7 @@ div_box = html.Div([dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'r
                     ], className='row')
 
 dataset_label = html.Label("Training dataset:", style={'font-weight': 'bold', 'margin-bottom': 10})
-dataset_radio = dcc.RadioItems({"isb": "F4K+", "saipem": "Saipem", "": "All"}, "isb", id="dataset-radio",
+dataset_radio = dcc.RadioItems({"isb": "F4K+", "client": "Client's DS", "": "All"}, "isb", id="dataset-radio",
                                className="form-check", labelStyle={'display': 'flex'},
                                inputClassName="form-check-input", labelClassName="form-check-label")
 dataset_div = html.Div([dataset_label, dataset_radio], className="col")
