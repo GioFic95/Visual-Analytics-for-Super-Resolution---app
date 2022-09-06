@@ -28,7 +28,7 @@ def parallel_plot(df: pd.DataFrame, constraints: List = (None, None, None, None,
                      tickvals=names_ids, ticktext=dfc['name'],
                      label='Name', values=names_ids)
             ]),
-            line=dict(color=names_ids, autocolorscale=True)
+            line=dict(color=names_ids)  # , autocolorscale=True
         )
     )
 
