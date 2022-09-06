@@ -102,16 +102,20 @@ boxmetric_dd = dcc.Dropdown(
                 value="ssim",
                 style={'width': '200px'}
 )
-boxmetric_div = html.Div([boxmetric_label, boxmetric_dd], className="col")
+div_boxhead = html.Div([
+    html.Div(html.H2("Examinate the distribution of the results of some images among all experiments"),
+             style={"margin-top": 15, "margin-left": 30}, className="col-9"),
+    html.Div([boxmetric_label, boxmetric_dd], className="col-3")
+], className='row')
 
 count_label = html.Label("Number of items:", style={'font-weight': 'bold', 'margin-bottom': 10})
 count_field = html.Div(html.Label(item_num, id="count_lab"), id="count_div")
 count_div = html.Div([count_label, count_field], className="col")
 
-div_buttons = html.Div([dataset_div, compression_div, metrics_div, boxmetric_div, count_div],
+div_buttons = html.Div([dataset_div, compression_div, metrics_div, count_div],
                        className="row", style={"margin": 15})
 
-app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter, div_box])
+app.layout = html.Div([div_title, div_parallel, div_buttons, div_scatter, div_boxhead, div_box])
 
 
 @app.callback(
