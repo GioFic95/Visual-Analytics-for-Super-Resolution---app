@@ -176,6 +176,7 @@ def update_sp_parallel(selection, old_scat, old_par, old_box):
         assert dim['label'] == 'Name'
         traces = dim['ticktext']
         idxs = dim['tickvals']
+        print("curr_dims:", curr_dims)  # todo remove
 
         for i, dim in enumerate(curr_dims):
             if dim['label'] == 'Name':
