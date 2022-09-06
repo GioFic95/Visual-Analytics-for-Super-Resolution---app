@@ -54,7 +54,7 @@ item_num = str(len(tmp_dfs))
 del tmp_dfs
 metric_combos = [f"{m1} VS {m2}" for m1, m2 in itertools.combinations(metrics, 2)] + ["pca_x VS pca_y"]
 boxmetrics = metrics + ["pca_x", "pca_y"]
-last_m123 = [None, None, None]
+last_m123 = ["ssim", "psnr_rgb", "ssim"]
 
 div_title = html.Div(html.H1(title), style={"margin-top": 30, "margin-left": 30})
 
