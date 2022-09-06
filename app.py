@@ -103,8 +103,8 @@ boxmetric_dd = dcc.Dropdown(
                 style={'width': '200px'}
 )
 div_boxhead = html.Div([
-    html.Div(html.H2("Examinate the distribution of the results of some images among all experiments"),
-             style={"margin-top": 15, "margin-left": 30}, className="col-9"),
+    html.Div(html.H3("Examinate the distribution of the results of some images among all experiments"),
+             style={"margin-top": 30, "padding-left": 30}, className="col-9"),
     html.Div([boxmetric_label, boxmetric_dd], className="col-3")
 ], className='row')
 
