@@ -142,9 +142,9 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 )
 def complete_auth(pathname, old_scat, store_queries):
     # https://developers.google.com/drive/api/guides/search-files#python
-    # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
+    # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22includeItemsFromAllDrives%22%3Atrue%2C%22pageSize%22%3A1000%2C%22q%22%3A%22trashed%20%3D%20false%20and%20(mimeType%3D%27image%2Fpng%27%20or%20mimeType%3D%27image%2Fjpeg%27)%20and%20%271gCwOmIq0yzeEA0W-HwSRZg1gVG6XJy8g%27%20in%20parents%22%2C%22supportsAllDrives%22%3Atrue%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     flask.session['state'] = state
-    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and '{gdrive_all}' in parents"
+    q = f"trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and '{gdrive_all}' in parents"
     username = request.authorization['username']
     files_all = dict()
     highlights = []
@@ -237,7 +237,7 @@ def complete_auth(pathname, old_scat, store_queries):
     if len(files_all) == 0:
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f"Complete auth but no images: {pathname}, {credentials}", new_div, files_all, highlights,\
+        return f"Complete auth but no images.", new_div, files_all, highlights,\
                size, qual, {'color': 'orange', 'margin': 15}, {'visibility': 'hidden', 'margin': 15}
     else:
         if len(files_all) != total:
