@@ -28,9 +28,9 @@ from utils import get_df, all_to_avg, make_query
 csv_all = Path("./assets/saipem_all.csv")
 types = {"name": str, "MS-SSIM": float, "PSNR": float, "quality": str, "size": str, "category": str}
 ds_suffix = "saipem"
-gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
-gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"
-
+# gdrive_gt = "1z6S181_ZDfFXaIA3E8IcBif6UHX2lh2a"
+# gdrive_res = "1zAbx0zjnoat2hNPQrMbQo7ha0Pr-i62z"
+gdrive_all = "1gCwOmIq0yzeEA0W-HwSRZg1gVG6XJy8g"
 
 title = "Visual Analytics for Underwater Super Resolution"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY], title=title,
@@ -119,8 +119,7 @@ div_auth = html.Div([
 ])
 
 div_storage = html.Div([
-    dcc.Store(id='store_gt', storage_type='session'),
-    dcc.Store(id='store_res', storage_type='session'),
+    dcc.Store(id='store_all', storage_type='session'),
     dcc.Store(id='store_highlights', storage_type='session'),
     dcc.Store(id='store_queries', storage_type='session'),
 ])
@@ -131,8 +130,7 @@ app.layout = html.Div([div_auth, div_title, div_parallel, div_buttons, div_scatt
 @app.callback(
     Output('credentials-label', 'children'),
     Output('my-div-sp', 'children'),
-    Output('store_gt', 'data'),
-    Output('store_res', 'data'),
+    Output('store_all', 'data'),
     Output('store_highlights', 'data'),
     Output('size-radio', 'value'),
     Output('quality-radio', 'value'),
@@ -146,11 +144,9 @@ def complete_auth(pathname, old_scat, store_queries):
     # https://developers.google.com/drive/api/guides/search-files#python
     # https://developers.google.com/drive/api/v3/reference/files/list?apix_params=%7B%22pageSize%22%3A1000%2C%22q%22%3A%22%271MiFD5DHri0VrfZUheQLux0GKNkxPpt1t%27%20in%20parents%22%2C%22fields%22%3A%22nextPageToken%2C%20files(id%2C%20name%2C%20webContentLink)%22%7D
     flask.session['state'] = state
-    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and " \
-        f"('{gdrive_gt}' in parents or '{gdrive_res}' in parents)"
+    q = "trashed = false and (mimeType='image/png' or mimeType='image/jpeg') and '{gdrive_all}' in parents"
     username = request.authorization['username']
-    files_gt = dict()
-    files_res = dict()
+    files_all = dict()
     highlights = []
     if store_queries:
         queries = store_queries
@@ -205,7 +201,7 @@ def complete_auth(pathname, old_scat, store_queries):
                 print("ERROR:", mse, traceback.format_exc())
                 old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                     figure=old_scat, id=f"my-graph-sp")
-                return f"Authentication failed", old_div, files_gt, files_res, highlights, size, qual,\
+                return f"Authentication failed", old_div, files_all, highlights, size, qual,\
                        {'color': 'red', 'margin': 15}, {'visibility': 'visible', 'margin': 15}
 
         # if first access, do nothing
@@ -213,7 +209,7 @@ def complete_auth(pathname, old_scat, store_queries):
             print("cache 4 (no query):", cache)
             old_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                                 figure=old_scat, id=f"my-graph-sp")
-            return f"Non authorized", old_div, files_gt, files_res, highlights, size, qual,\
+            return f"Non authorized", old_div, files_all, highlights, size, qual,\
                    {'color': 'black', 'margin': 15}, {'visibility': 'visible', 'margin': 15}
 
     total = 0
@@ -230,32 +226,27 @@ def complete_auth(pathname, old_scat, store_queries):
             curr_files = response.get('files', [])
             total += len(curr_files)
             for file in curr_files:
-                if gdrive_gt in file['parents']:
-                    files_gt[file['name']] = file['webContentLink']
-                elif gdrive_res in file['parents']:
-                    files_res[file['name']] = file['webContentLink']
-                else:
-                    raise ValueError("unrecognized parent")
+                files_all[file['name']] = file['webContentLink']
             page_token = response.get('nextPageToken', None)
             if page_token is None:
                 break
     except HttpError as error:
         print(f'An error occurred: {error}')
 
-    print("files:", files_gt, files_res, len(files_res) + len(files_gt), total)
-    if len(files_res) + len(files_gt) == 0:
+    print("files:", files_all, len(files_all), total)
+    if len(files_all) == 0:
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=old_scat, id=f"my-graph-sp")
-        return f"Complete auth but no images: {pathname}, {credentials}", new_div, files_gt, files_res, highlights,\
+        return f"Complete auth but no images: {pathname}, {credentials}", new_div, files_all, highlights,\
                size, qual, {'color': 'orange', 'margin': 15}, {'visibility': 'hidden', 'margin': 15}
     else:
-        if len(files_res) + len(files_gt) != total:
+        if len(files_all) != total:
             warnings.warn("len of dictionaries != number of files")
-        highlights[:] = list(files_res.keys())
+        highlights[:] = [f for f in files_all.keys() if "original" in f]
         new_scat = scatter_plot(curr_dfs.query(make_query(queries)), highlights=highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
-        return "Authorized", new_div, files_gt, files_res, highlights, size, qual,\
+        return "Authorized", new_div, files_all, highlights, size, qual,\
                {'color': 'green', 'margin': 15}, {'visibility': 'hidden', 'margin': 15}
 
 
@@ -364,25 +355,23 @@ def update_sp_parallel(selection, old_scat, old_par, highlights, queries):
     Output('my-img', 'children'),
     Input('my-graph-sp', 'clickData'),
     Input('my-graph-sp', 'figure'),
-    State('store_gt', 'data'),
-    State('store_res', 'data'),
+    State('store_all', 'data'),
 )
-def display_click_data(click_data, graph, store_gt, store_res):
+def display_click_data(click_data, graph, store_all):
     if click_data is not None:
-        files_gt = store_gt
-        files_res = store_res
+        files_all = store_all
 
         trace = graph['data'][click_data['points'][0]['curveNumber']]['name']
         print("click:", click_data, "\n", trace, "\n")
         name = click_data['points'][0]['text']
         gt_name = f"{name.split('_')[0]}_{name.split('_')[1]}_original.png"
         res_name = name
-        print("OOOOOOOH", name, gt_name, res_name, files_gt, files_res)
+        print("OOOOOOOH", name, gt_name, res_name, files_all)
         try:
-            print("AAAAAAAAA", gt_name, files_gt[gt_name], res_name, files_res[res_name])
+            print("AAAAAAAAA", gt_name, files_all[gt_name], res_name, files_all[res_name])
             new_div = html.Div([
-                html.Img(src=files_gt[gt_name], height=395),
-                html.Img(src=files_res[res_name], height=395),
+                html.Img(src=files_all[gt_name], height=395),
+                html.Img(src=files_all[res_name], height=395),
                 html.Div(name, style={"margin-top": 10, "margin-bottom": 15}),
             ])
         except KeyError:
