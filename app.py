@@ -242,7 +242,7 @@ def complete_auth(pathname, old_scat, store_queries):
     else:
         if len(files_all) != total:
             warnings.warn("len of dictionaries != number of files")
-        highlights[:] = [f for f in files_all.keys() if "original" in f]
+        highlights[:] = [f for f in files_all.keys() if "original" not in f]
         new_scat = scatter_plot(curr_dfs.query(make_query(queries)), highlights=highlights)
         new_div = dcc.Graph(config={'displayModeBar': False, 'doubleClick': 'reset'}, style={"margin-top": 34},
                             figure=new_scat, id=f"my-graph-sp")
